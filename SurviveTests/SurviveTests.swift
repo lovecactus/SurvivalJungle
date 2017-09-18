@@ -27,10 +27,46 @@ class SurviveTests: XCTestCase {
     }
     
     func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+        /*
+        var AllCreatures:[Creature] = []
+        var AllCreaturesDict:[String:Creature] = [:]
+        for index in 1...20000 {
+            let NewBorn = Creature(creatureIdentifier: String(index))
+            AllCreatures.append(NewBorn)
+            AllCreaturesDict[String(index)] = NewBorn
         }
+
+        self.measure {
+            for _ in 1...AllCreatures.count {
+                _ = AllCreatures[0]
+//                _ = AllCreaturesDict[String(1999)]
+            }
+        }
+        */
+        
+         let NewJungle = SurvivalJungle()
+         self.measure {
+            NewJungle.CleanUpStatstic()
+            NewJungle.Working()
+            NewJungle.Thinking()
+            NewJungle.SurviveCreaturesStatistic(1)
+         }
+
+        /*
+        var AllNumbersArray:[Int] = []
+        AllNumbersArray.reserveCapacity(20)
+        for index in 1...20 {
+            AllNumbersArray.append(index)
+        }
+ 
+        self.measure {
+            for _ in 1...AllNumbersArray.count {
+                _ = AllNumbersArray[0]
+            }
+        }
+         */
+        
     }
+
     
 }

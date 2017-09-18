@@ -21,10 +21,19 @@ struct SurvivalStatistic{
     var Alone:Int = 0
 }
 
+struct WorkResultRecord{
+    var Creature1:Creature
+    var Creature2:Creature
+    var Creature1Action:WorkAction
+    var Creature2Action:WorkAction
+    var Creature1Result:WorkResult
+    var Creature2Result:WorkResult
+}
+
 class SurvivalJungle {
     let seasonNumber = 1000
 
-    public static let ForestTotalResource = 10000
+    public static let ForestTotalResource = 5000
     public static var CreatureSurviveScore:Double = -50
     public static let CreatureReproductionScore:Double = 100
     
@@ -41,11 +50,14 @@ class SurvivalJungle {
     }
     
     func initialCreatureGroup() {
-        for index in 1...50 {
+        for index in 1...20 {
             AllCreatures.append(OpenBadCreature(creatureIdentifier: "OpenBad"+String(index)))
         }
-        for index in 1...50 {
-            AllCreatures.append(ConservativeBadCreature(creatureIdentifier: "ConservativeBad"+String(index)))
+        for index in 1...20 {
+           AllCreatures.append(ConservativeBadCreature(creatureIdentifier: "ConservativeBad"+String(index)))
+        }
+        for index in 1...20 {
+            AllCreatures.append(StrategyBadCreature(creatureIdentifier: "StrategyBad"+String(index)))
         }
         for index in 1...50 {
             AllCreatures.append(NiceCreature(creatureIdentifier: "Nice"+String(index)))
@@ -66,22 +78,24 @@ class SurvivalJungle {
     }
         
     func WorkMatchPairs(AllCreatures:[Creature]) ->[[Creature]]{
-        var ShuffleAllCreatures = AllCreatures
-        ShuffleAllCreatures.shuffle()
-        let CandidateCreatures = AllCreatures
+        var CandidateCreatures = AllCreatures
 
-        let ShuffledCreaturePairs:[[Creature]] = ShuffleAllCreatures.map { (Creature) -> [Creature] in
-            if let CoWorker = Creature.findCoWorker(candidate: CandidateCreatures) {
+        let MatchedCreaturePairs:[[Creature]] = CandidateCreatures.map { (Creature) -> [Creature] in
+            if let CoWorker = Creature.findCoWorker(candidate: &CandidateCreatures) {
                 return [Creature, CoWorker]
             }
             return [Creature]
         }
 
-        return ShuffledCreaturePairs
+        return MatchedCreaturePairs
     }
     
     func Working() {
+        var AverageResource:Double = Double(SurvivalJungle.ForestTotalResource/AllCreatures.count)/10
+        AverageResource = (AverageResource > 10) ? 10 : AverageResource
+
         let ShuffledCreaturePairs = self.WorkMatchPairs(AllCreatures: AllCreatures)
+        var WorkResults:[WorkResultRecord] = []
         for CreaturePair in ShuffledCreaturePairs {
             if (CreaturePair.count == 1){
                 let Creature1 = CreaturePair[0]
@@ -105,26 +119,46 @@ class SurvivalJungle {
                             Action2: Creature2Action,
                             Result2: &Creature2Result)
                 
-                switch Creature1Result {
-                case .beenCheated,.exploitation:
-                    Statistic.Cheat += 1
-                    break;
-                case .doubleWin:
-                    Statistic.Cooperate += 1
-                    break;
-                case .doubleLose:
-                    Statistic.Failure += 1
-                    break;
-                default:
-                    break;
-                }
-
-                var AverageResource:Double = Double(SurvivalJungle.ForestTotalResource/AllCreatures.count)/10
-                AverageResource = (AverageResource > 10) ? 10 : AverageResource
-                Creature1.workResult(AnotherCreature: Creature2, AnotherAction: Creature2Action, result: Creature1Result, harvestResource: AverageResource)
-                Creature2.workResult(AnotherCreature: Creature1, AnotherAction: Creature1Action, result: Creature2Result, harvestResource: AverageResource)
-                
+                WorkResults.append(WorkResultRecord(Creature1: Creature1,
+                                                    Creature2: Creature2,
+                                                    Creature1Action: Creature1Action,
+                                                    Creature2Action: Creature2Action,
+                                                    Creature1Result: Creature1Result,
+                                                    Creature2Result: Creature2Result))
             }
+        }
+        
+        for WorkResult in WorkResults {
+            
+            switch WorkResult.Creature1Result {
+            case .beenCheated,.exploitation:
+                Statistic.Cheat += 1
+                break;
+            case .doubleWin:
+                Statistic.Cooperate += 1
+                break;
+            case .doubleLose:
+                Statistic.Failure += 1
+                break;
+            default:
+                break;
+            }
+            
+            WorkResult.Creature1.workResult(AnotherCreature: WorkResult.Creature2,
+                                            AnotherAction: WorkResult.Creature2Action,
+                                            result: WorkResult.Creature1Result,
+                                            harvestResource: AverageResource)
+            WorkResult.Creature2.workResult(AnotherCreature: WorkResult.Creature1,
+                                            AnotherAction: WorkResult.Creature1Action,
+                                            result: WorkResult.Creature2Result,
+                                            harvestResource: AverageResource)
+            
+        }
+    }
+    
+    func Thinking() {
+        AllCreatures.forEach { (Creature) in
+            Creature.thinking()
         }
     }
 
@@ -157,6 +191,7 @@ class SurvivalJungle {
         for index in 1...seasonNumber{
             self.CleanUpStatstic()
             self.Working()
+            self.Thinking()
             self.CreturesReproduction()
             self.CreturesSurvival()
             self.SurviveCreaturesStatistic(index)
@@ -184,7 +219,11 @@ class SurvivalJungle {
         let survivedOpenBadCreature = AllCreatures.filter { (Creature) -> Bool in
             return Creature is OpenBadCreature
         }
-        
+
+        let survivedStrategyBadCreature = AllCreatures.filter { (Creature) -> Bool in
+            return Creature is StrategyBadCreature
+        }
+
         let survivedConservativeBadCreature = AllCreatures.filter { (Creature) -> Bool in
             return Creature is ConservativeBadCreature
         }
@@ -194,7 +233,7 @@ class SurvivalJungle {
         }
         
         print ("round:",round, "\t cooperate:",Statistic.Cooperate, "\t cheat:",Statistic.Cheat, "\t failure:",Statistic.Failure, "\t NewBorn:",Statistic.NewBorn, "\t died:",Statistic.Died);
-        print ("All Creatures:",AllCreatures.count,"\t NiceCreature:",survivedNiceCreature.count,"\t OpenBadCreature:",survivedOpenBadCreature.count,"\t ConservativeBadCreature:",survivedConservativeBadCreature.count,"\t MeanCreature:",survivedMeanCreature.count)
+        print ("All Creatures:",AllCreatures.count,"\t NiceCreature:",survivedNiceCreature.count,"\t OpenBadCreature:",survivedOpenBadCreature.count,"\t ConservativeBadCreature:",survivedConservativeBadCreature.count,"\t StrategyBadCreature:",survivedStrategyBadCreature.count,"\t MeanCreature:",survivedMeanCreature.count)
         print ("group resource:", creatureResources.reduce(0, +), "average resource:",creatureResources.average)
 
     }

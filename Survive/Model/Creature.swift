@@ -48,6 +48,16 @@ class Creature : AnyObject {
     
     func workResult(AnotherCreature: Creature, AnotherAction: WorkAction, result : WorkResult, harvestResource : Double){
         self.Memory.remember(AnotherCreature:AnotherCreature, Behavior:AnotherAction)
+        if result == .doubleWin {
+            if let OldFriendID = self.Memory.thinkOfOneRandomFriendID(), OldFriendID != AnotherCreature.identifier{
+                self.tell(Other: AnotherCreature, About: OldFriendID, WorkBehavior: self.Memory.thinkOf(AnotherCreatureID: OldFriendID))
+            }
+
+            if let OldEnemyID = self.Memory.thinkOfOneRandomEnemyID(), OldEnemyID != AnotherCreature.identifier{
+                self.tell(Other: AnotherCreature, About: OldEnemyID, WorkBehavior: self.Memory.thinkOf(AnotherCreatureID: OldEnemyID))
+            }
+
+        }
         SurviveResource += SocialBehavior.WorkReword(result, harvestResource: harvestResource)
     }
     
@@ -55,6 +65,10 @@ class Creature : AnyObject {
         return WorkAction.none
     }
 
+    func thinking() {
+        //I'm too stupid to think about myself!
+    }
+    
     func stayAlone(){
         SurviveResource -= SocialBehavior.StayLonely()
     }
@@ -75,7 +89,7 @@ class Creature : AnyObject {
         return multipliedCreature
     }
 
-    func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
+    func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
         guard Creatures.count > 0 else {
             return nil
         }
@@ -83,7 +97,7 @@ class Creature : AnyObject {
         return Creatures[Int(rollDice)]
     }
     
-    func findOneFriendFromCandidate(candidate Creatures:[Creature]) -> Creature?{
+    func findOneFriendFromCandidate(candidate Creatures:inout [Creature]) -> Creature?{
         while let OldFriendID = self.Memory.thinkOfOneRandomFriendID() {
             var OldFriend:Creature? = nil
             if let i = Creatures.index(where: { (Creature) -> Bool in
@@ -108,10 +122,44 @@ class Creature : AnyObject {
         }
     }
 
-    func avoidBadGuysFromCandidate(candidate Creatures:[Creature]) -> [Creature]{
-        return Creatures.filter { (Creature) -> Bool in
-            return (WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creature))
+    func findNiceGuyFromCandidate(candidate Creatures:inout [Creature]) -> Creature?{
+        guard Creatures.count > 0 else {
+            return nil
         }
+        /*return Creatures.first(where: { (Creature) -> Bool in
+            return (WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creature))
+        })*/
+
+        /*
+        return Creatures.filter({ (Creature) -> Bool in
+            return (WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creature))
+        }).randomPick()*/
+
+        let randomIndex = Int(arc4random_uniform(UInt32(Creatures.count)))
+        var randomeNiceGuy:Creature? = nil
+        for index in randomIndex...Creatures.count-1{
+            if WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creatures[index]) {
+                randomeNiceGuy = Creatures[index]
+                break;
+            }
+        }
+        if nil == randomeNiceGuy {
+            for index in 0...randomIndex{
+                if WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creatures[index]) {
+                    randomeNiceGuy = Creatures[index]
+                    break;
+                }
+            }
+        }
+        return randomeNiceGuy
+    }
+
+    func tell(Other Creature:Creature, About AnotherCreature:Creature, WorkBehavior Bahavior:WorkAction){
+        Creature.Memory.remember(AnotherCreature: AnotherCreature, Behavior: Bahavior)
+    }
+    
+    func tell(Other Creature:Creature, About AnotherCreatureID:String, WorkBehavior Bahavior:WorkAction){
+        Creature.Memory.remember(AnotherCreatureID: AnotherCreatureID, Behavior: Bahavior)
     }
 
 }
@@ -126,12 +174,12 @@ class NiceCreature : Creature, ReproductionProtocol {
         return NiceCreature.init(creatureIdentifier: self.identifier+".")
     }
     
-    override func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
         var CoWorkCreature:Creature?
         
-        if let OldFriend = self.findOneFriendFromCandidate(candidate: Creatures){
+        if let OldFriend = self.findOneFriendFromCandidate(candidate: &Creatures){
             CoWorkCreature = OldFriend
-        }else if let NewFriend = self.avoidBadGuysFromCandidate(candidate: Creatures).randomPick(){
+        }else if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
             CoWorkCreature = NewFriend
         }else {
             CoWorkCreature = Creatures.randomPick()
@@ -151,23 +199,22 @@ class BadCreature : Creature, ReproductionProtocol {
         return BadCreature.init(creatureIdentifier: self.identifier+".")
     }
     
-    override func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
-        return super.findCoWorker(candidate: Creatures)
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
+        return super.findCoWorker(candidate: &Creatures)
     }
 
 }
 
 class OpenBadCreature : BadCreature {
     override func selfReproduction() -> Creature {
-        print (anotherType)
         SurviveResource -= SurvivalJungle.CreatureReproductionScore
         return OpenBadCreature.init(creatureIdentifier: self.identifier+".")
     }
 
-    override func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
         var CoWorkCreature:Creature?
         
-        if let NewFriend = self.avoidBadGuysFromCandidate(candidate: Creatures).randomPick(){
+        if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
             CoWorkCreature = NewFriend
         }else {
             CoWorkCreature = Creatures.randomPick()
@@ -182,12 +229,12 @@ class ConservativeBadCreature : BadCreature {
         return ConservativeBadCreature.init(creatureIdentifier: self.identifier+".")
     }
 
-    override func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
         var CoWorkCreature:Creature?
         
-        if let OldFriend = self.findOneFriendFromCandidate(candidate: Creatures) {
+        if let OldFriend = self.findOneFriendFromCandidate(candidate: &Creatures) {
             CoWorkCreature = OldFriend
-        }else if let NewFriend = self.avoidBadGuysFromCandidate(candidate: Creatures).randomPick(){
+        }else if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
             CoWorkCreature = NewFriend
         }else {
             CoWorkCreature = Creatures.randomPick()
@@ -196,7 +243,50 @@ class ConservativeBadCreature : BadCreature {
     }
 }
 
+class StrategyBadCreature : BadCreature {
+    var disguiseCounter:Int = 0
+    let showSelfCount:Int = 10
+    var currentStrategyAction  = WorkAction.devote
+    override func workAction(ToAnotherCreature: Creature) -> WorkAction {
+        return currentStrategyAction
+    }
+
+    override func thinking() {
+        //Think about how to disguise myself
+        disguiseCounter += 1
+        if disguiseCounter > showSelfCount {
+            currentStrategyAction = WorkAction.cheat
+        }else {
+            currentStrategyAction = WorkAction.devote
+        }
+
+    }
+
+/*    override func workAction(ToAnotherCreature: Creature) -> WorkAction {
+        guard let randomAction = [WorkAction.cheat, WorkAction.devote].randomPick() else {
+            return WorkAction.none
+        }
+        return randomAction
+    }
+*/
     
+    override func selfReproduction() -> Creature {
+        SurviveResource -= SurvivalJungle.CreatureReproductionScore
+        return StrategyBadCreature.init(creatureIdentifier: self.identifier+".")
+    }
+    
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
+        var CoWorkCreature:Creature?
+        
+        if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
+            CoWorkCreature = NewFriend
+        }else {
+            CoWorkCreature = Creatures.randomPick()
+        }
+        return CoWorkCreature
+    }
+}
+
 class MeanCreature : Creature, ReproductionProtocol {
     override func workAction(ToAnotherCreature: Creature) -> WorkAction {
         var workAction = self.Memory.thinkOf(AnotherCreature: ToAnotherCreature)
@@ -210,11 +300,11 @@ class MeanCreature : Creature, ReproductionProtocol {
         SurviveResource -= SurvivalJungle.CreatureReproductionScore
         let NewBornCreature = MeanCreature.init(creatureIdentifier: self.identifier+".")
         NewBornCreature.Memory = CreatureMemory()
-        NewBornCreature.Memory.memory = self.Memory.memoryInherit()
+        NewBornCreature.Memory.behaviorMemory = self.Memory.memoryInherit()
         return NewBornCreature
     }
     
-    override func findCoWorker(candidate Creatures:[Creature]) -> Creature?{
+    override func findCoWorker(candidate Creatures:inout [Creature]) -> Creature?{
         var CoWorkCreature:Creature?
         
 //        switch CoWorkerChooseDecision.randomChoose() {
@@ -222,9 +312,9 @@ class MeanCreature : Creature, ReproductionProtocol {
 //            CoWorkCreature = self.kickOutBadGuysFromCandidate(candidate: Creatures).randomPick()
 //            break
 //        case .ChooseOldFriend:
-        if let OldFriend = self.findOneFriendFromCandidate(candidate: Creatures) {
+        if let OldFriend = self.findOneFriendFromCandidate(candidate: &Creatures) {
             CoWorkCreature = OldFriend
-        }else if let NewFriend = self.avoidBadGuysFromCandidate(candidate: Creatures).randomPick(){
+        }else if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
             CoWorkCreature = NewFriend
         }else {
             CoWorkCreature = Creatures.randomPick()
@@ -237,29 +327,40 @@ class MeanCreature : Creature, ReproductionProtocol {
 
 
 class CreatureMemory{
-    var memory:[String:WorkAction] = [:]
-    
+    var behaviorMemory:[String:WorkAction] = [:]
+
+    func remember (AnotherCreatureID:String, Behavior:WorkAction){
+        behaviorMemory[AnotherCreatureID] = Behavior
+    }
+
     func remember (AnotherCreature:Creature, Behavior:WorkAction){
-        memory[AnotherCreature.identifier] = Behavior
+        behaviorMemory[AnotherCreature.identifier] = Behavior
     }
     
     func forget (AnotherCreatureID : String) {
-        memory.removeValue(forKey: AnotherCreatureID)
+        behaviorMemory.removeValue(forKey: AnotherCreatureID)
     }
-    
+
+    func thinkOf(AnotherCreatureID : String) -> WorkAction {
+        guard let memoryForThisCreature = behaviorMemory[AnotherCreatureID] else {
+            return WorkAction.none
+        }
+        return memoryForThisCreature
+    }
+
     func thinkOf(AnotherCreature:Creature) -> WorkAction {
-        guard let memoryForThisCreature = memory[AnotherCreature.identifier] else {
+        guard let memoryForThisCreature = behaviorMemory[AnotherCreature.identifier] else {
             return WorkAction.none
         }
         return memoryForThisCreature
     }
 
     func memoryInherit() -> [String:WorkAction] {
-        return memory
+        return behaviorMemory
     }
     
     func thinkOfOneRandomFriendID() -> String? {
-        let niceMemories = memory.filter {
+        let niceMemories = behaviorMemory.filter {
             return  $1 == .devote
         }.map { (key: String, value: WorkAction) -> String in
             return key
@@ -267,7 +368,17 @@ class CreatureMemory{
         
         return niceMemories.randomPick()
     }
-    
+
+    func thinkOfOneRandomEnemyID() -> String? {
+        let badMemories = behaviorMemory.filter {
+            return  $1 == .cheat
+            }.map { (key: String, value: WorkAction) -> String in
+                return key
+        }
+        
+        return badMemories.randomPick()
+    }
+
     
 }
 
