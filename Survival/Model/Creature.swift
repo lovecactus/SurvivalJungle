@@ -152,7 +152,7 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
             if let NewBornCreature = ReproductionBlock() {
                 NewBornCreature.Memory = CreatureMemory()
                 NewBornCreature.Memory.behaviorMemory = self.Memory.memoryInherit()
-                NewBornCreature.writeStory("Inherit memory from parent:"+self.Memory.behaviorMemory.description)
+                NewBornCreature.writeStory("Inherit memory from parent:"+NewBornCreature.Memory.behaviorMemory.description)
                 return NewBornCreature
             }else{
                 print (#function+" reproduction error!")
@@ -320,6 +320,17 @@ class ConservativeCreature : Creature{
         }
     }
 
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        if (self.Memory.thinkOf(AnotherCreature: creature) == .helpOther) {
+            story += " and trust it"
+            self.Memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        }else{
+            story += " but don't trust it"
+        }
+        self.writeStory(story)
+    }
+
 }
 
 class OpenBadCreature : Creature {
@@ -356,6 +367,13 @@ class OpenBadCreature : Creature {
         if let OldEnemyID = self.Memory.thinkOfOneRandomEnemyID(), OldEnemyID != creature.identifier.uniqueID{
             self.tell(creature, About: OldEnemyID, WorkBehavior: .helpOther)
         }
+    }
+
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        story += " and trust it"
+        self.Memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        self.writeStory(story)
     }
 
 }
@@ -398,6 +416,13 @@ class ConservativeBadCreature : Creature {
             self.tell(creature, About: OldEnemyID, WorkBehavior: .helpOther)
         }
     }
+    
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        story += " but don't trust it"
+        self.writeStory(story)
+    }
+
 }
 
 class StrategyBadCreature : Creature {
@@ -444,6 +469,18 @@ class StrategyBadCreature : Creature {
             self.tell(creature, About: OldEnemyID, WorkBehavior: .helpOther)
         }
     }
+    
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        if (self.Memory.thinkOf(AnotherCreature: creature) == .helpOther) {
+            story += " and trust it"
+            self.Memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        }else{
+            story += " but don't trust it"
+        }
+        self.writeStory(story)
+    }
+
 }
 
 class MeanCreature : Creature{
@@ -455,23 +492,22 @@ class MeanCreature : Creature{
 
     
     override func findCoWorker(candidate Creatures:inout [Creature]) -> WorkAction?{
-        let CoWorkAction:WorkAction?
+        var CoWorkCreature:Creature?
         
-        if let OldFriend = self.findOneFriendFromCandidate(candidate: &Creatures) {
-            CoWorkAction = WorkAction(Worker:self, WorkingPartner: OldFriend, WorkingAttitude: .helpOther)
+        if let OldFriend = self.findOneFriendFromCandidate(candidate: &Creatures){
+            CoWorkCreature = OldFriend
         }else if let NewFriend = self.findNiceGuyFromCandidate(candidate: &Creatures){
-            CoWorkAction = WorkAction(Worker:self, WorkingPartner: NewFriend, WorkingAttitude: .helpOther)
+            CoWorkCreature = NewFriend
         }else {
-            //There are only "bad guys", treat them bad back
-            if let CoWorkCreature = Creatures.randomPick() {
-                CoWorkAction = WorkAction(Worker:self, WorkingPartner: CoWorkCreature, WorkingAttitude: .selfish)
-            }else{
-                CoWorkAction = nil
-            }
+            CoWorkCreature = Creatures.randomPick()
         }
-        return CoWorkAction
+        
+        if let foundCoworker = CoWorkCreature {
+            return WorkAction(Worker:self, WorkingPartner: foundCoworker, WorkingAttitude: .helpOther)
+        }
+        return nil
     }
-    
+
     override func respondWorkAction(to AnotherCreature: Creature) -> WorkAction {
         var workAction = self.Memory.thinkOf(AnotherCreature: AnotherCreature)
         if workAction == .none {
@@ -492,12 +528,23 @@ class MeanCreature : Creature{
         }
     }
 
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        if (self.Memory.thinkOf(AnotherCreature: creature) == .helpOther) {
+            story += " and trust it"
+            self.Memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        }else{
+            story += " but don't trust it"
+        }
+        self.writeStory(story)
+    }
+
 }
 
-class OpenMeanCreature : Creature{
+class SelfishMeanCreature : Creature{
     override func selfReproduction() -> Creature? {
         return super.selfReproduction (ReproductionBlock: { () -> Creature? in
-            OpenMeanCreature.init(familyName: identifier.familyName, givenName:identifier.givenName+"#")
+            SelfishMeanCreature.init(familyName: identifier.familyName, givenName:identifier.givenName+"#")
         })
     }
     
@@ -536,6 +583,17 @@ class OpenMeanCreature : Creature{
                 self.tell(creature, About: OldEnemyID, WorkBehavior: self.Memory.thinkOf(AnotherCreatureID: OldEnemyID))
             }
         }
+    }
+
+    override func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        if (self.Memory.thinkOf(AnotherCreature: creature) == .helpOther) {
+            story += " and trust it"
+            self.Memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        }else{
+            story += " but don't trust it"
+        }
+        self.writeStory(story)
     }
 
 }

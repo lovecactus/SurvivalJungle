@@ -69,7 +69,7 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         var niceValues:[ChartDataEntry] = []
         var conservativeValues:[ChartDataEntry] = []
         var meanValues:[ChartDataEntry] = []
-        var openMeanValues:[ChartDataEntry] = []
+        var selfishMeanValues:[ChartDataEntry] = []
 
         for index in 0...statistics.count-1 {
             
@@ -79,7 +79,7 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
             niceValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Nice)))
             conservativeValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Conservative)))
             meanValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Mean)))
-            openMeanValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].OpenMean)))
+            selfishMeanValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].SelfishMean)))
         }
         
         let OpenBadDataSet = self.setupDataSet("Open Bad", values: openBadValues, color: .red)
@@ -88,8 +88,8 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         let NiceDataSet = self.setupDataSet("Nice", values: niceValues, color: .green)
         let ConservativeDataSet = self.setupDataSet("Conservative", values: conservativeValues, color: .orange)
         let MeanDataSet = self.setupDataSet("Mean", values: meanValues, color: .cyan)
-        let OpenMeanDataSet = self.setupDataSet("OpenMean", values: openMeanValues, color: .darkGray)
-        let staticDataSets = LineChartData(dataSets: [OpenBadDataSet,ConservativeBadDataSet,StrategyBadDataSet,NiceDataSet,ConservativeDataSet,MeanDataSet,OpenMeanDataSet])
+        let SelfishMeanDataSet = self.setupDataSet("Selfish Mean", values: selfishMeanValues, color: .darkGray)
+        let staticDataSets = LineChartData(dataSets: [OpenBadDataSet,ConservativeBadDataSet,StrategyBadDataSet,NiceDataSet,ConservativeDataSet,MeanDataSet,SelfishMeanDataSet])
         
         return staticDataSets
     }

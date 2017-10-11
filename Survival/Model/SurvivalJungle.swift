@@ -21,7 +21,7 @@ struct SurvivalStatistic{
     var Nice:Int = 0
     var Conservative:Int = 0
     var Mean:Int = 0
-    var OpenMean:Int = 0
+    var SelfishMean:Int = 0
 
     var Cheat:Int = 0
     var Cooperate:Int = 0
@@ -69,7 +69,7 @@ class SurvivalJungle {
             AllCreatures.append(MeanCreature(familyName: "Mean", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
         for index in 1...CreatureNumber {
-            AllCreatures.append(OpenMeanCreature(familyName: "OpenMean", givenName: String(index), age:Int(arc4random_uniform(50))))
+            AllCreatures.append(SelfishMeanCreature(familyName: "SelfishMean", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
 
     }
@@ -212,8 +212,8 @@ class SurvivalJungle {
             return Creature is MeanCreature
         }
 
-        let survivedOpenMeanCreature = AllCreatures.filter { (Creature) -> Bool in
-            return Creature is OpenMeanCreature
+        let survivedSelfishMeanCreature = AllCreatures.filter { (Creature) -> Bool in
+            return Creature is SelfishMeanCreature
         }
 
         SeasonStatistic.Total = AllCreatures.count
@@ -224,7 +224,7 @@ class SurvivalJungle {
         SeasonStatistic.ConservativeBad = survivedConservativeBadCreature.count
         SeasonStatistic.StrategyBad = survivedStrategyBadCreature.count
         SeasonStatistic.Mean = survivedMeanCreature.count
-        SeasonStatistic.OpenMean = survivedOpenMeanCreature.count
+        SeasonStatistic.SelfishMean = survivedSelfishMeanCreature.count
 
         print ("round:",season,
                "\t cooperate:",SeasonStatistic.Cooperate,
@@ -241,7 +241,7 @@ class SurvivalJungle {
                "\t ConservativeBadCreature:",SeasonStatistic.ConservativeBad,
                "\t StrategyBadCreature:",SeasonStatistic.StrategyBad,
                "\t MeanCreature:",SeasonStatistic.Mean,
-               "\t OpenMeanCreature:",SeasonStatistic.OpenMean
+               "\t SelfishMeanCreature:",SeasonStatistic.SelfishMean
                )
         
         print ("group resource:", creatureResources.reduce(0, +), "average resource:",creatureResources.average)
