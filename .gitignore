@@ -6,3 +6,5 @@
 #CocoPods
 Pods/
 
+#Xcode files
+xcuserdata
