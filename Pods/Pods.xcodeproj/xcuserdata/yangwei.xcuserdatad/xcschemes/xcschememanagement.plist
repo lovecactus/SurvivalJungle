@@ -9,22 +9,17 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-Survive.xcscheme</key>
+		<key>Pods-Survival.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-SurviveTests.xcscheme</key>
+		<key>Pods-SurvivalTests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Pods-SurviveUITests.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>SQLite.swift.xcscheme</key>
+		<key>Pods-SurvivalUITests.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -32,22 +27,17 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>69A3AB28F3FD6B47A27F78F590322A54</key>
+		<key>2B13DD7B4F1963C36AF8303AA1991E05</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>6A391BB2A49B973424A001F227F75F3A</key>
+		<key>83840C52BBBF3C124427CD8614E11DD7</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>973EF6DEB702DFF817E3AE8C4F81451B</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>F0EF35B48579F02FA566E4F2AA3CF804</key>
+		<key>9A3A5B2489D464918657D13DF208944C</key>
 		<dict>
 			<key>primary</key>
 			<true/>

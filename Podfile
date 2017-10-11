@@ -1,24 +1,21 @@
 # Uncomment the next line to define a global platform for your project
 # platform :ios, '9.0'
 
-# Comment the next line if you're not using Swift and don't want to use dynamic frameworks
+target 'Survival' do
+  # Comment the next line if you're not using Swift and don't want to use dynamic frameworks
   use_frameworks!
 
-def shared_pods
-    pod 'SQLite.swift' 
-    pod 'Charts'
-end
+  # Pods for Survival
+  
+  # Statics 
+  pod 'Charts'
 
-target 'Survive' do
-  # Pods for Survive
-  shared_pods
-
-  target 'SurviveTests' do
+  target 'SurvivalTests' do
     inherit! :search_paths
     # Pods for testing
   end
 
-  target 'SurviveUITests' do
+  target 'SurvivalUITests' do
     inherit! :search_paths
     # Pods for testing
   end
