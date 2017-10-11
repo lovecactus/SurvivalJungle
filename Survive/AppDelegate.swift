@@ -15,9 +15,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        guard let window = self.window else {
+            return false
+        }
+        window.addSubview(StatisticsChart(frame:window.frame))
         // Override point for customization after application launch.
-        let NewJungle = SurvivalJungle()
-        NewJungle.SurviveSeason()
+//        let NewJungle = SurvivalJungle()
+//        NewJungle.SurviveSeason()
         return true
     }
 

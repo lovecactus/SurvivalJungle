@@ -6,6 +6,7 @@
 
 def shared_pods
     pod 'SQLite.swift' 
+    pod 'Charts'
 end
 
 target 'Survive' do

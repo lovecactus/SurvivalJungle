@@ -1,14 +1,19 @@
 PODS:
+  - Charts (3.0.2):
+    - Charts/Core (= 3.0.2)
+  - Charts/Core (3.0.2)
   - SQLite.swift (0.11.3):
     - SQLite.swift/standard (= 0.11.3)
   - SQLite.swift/standard (0.11.3)
 
 DEPENDENCIES:
+  - Charts
   - SQLite.swift
 
 SPEC CHECKSUMS:
+  Charts: 236d6ccdd0ce6feae151d89e829a7397381a21fd
   SQLite.swift: 99b36c22084427f0abbeb957556ce1528cf10bb3
 
-PODFILE CHECKSUM: 535e7b5b16554c40e2ecb0ee34e3c7fb3941b54e
+PODFILE CHECKSUM: 0b3c9a163fba3092ded7acd662c4ac5d2d41a485
 
 COCOAPODS: 1.2.1

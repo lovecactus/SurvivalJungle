@@ -19,6 +19,7 @@
 		447C742A1F5DB7350021563F /* SurviveUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447C74291F5DB7350021563F /* SurviveUITests.swift */; };
 		447C74391F5DB7B60021563F /* DBLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447C74381F5DB7B60021563F /* DBLayer.swift */; };
 		44CF47AE1F61991B00346751 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CF47AD1F61991B00346751 /* Extensions.swift */; };
+		44DA92171F7170E700486C77 /* StatisticsConsole.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DA92161F7170E700486C77 /* StatisticsConsole.swift */; };
 		44F4B48A1F604A04009BF5A3 /* SurvivalJungle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F4B4891F604A04009BF5A3 /* SurvivalJungle.swift */; };
 		44F4B48C1F604CEB009BF5A3 /* SocialBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F4B48B1F604CEB009BF5A3 /* SocialBehavior.swift */; };
 		44F4B48E1F604D1F009BF5A3 /* Creature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F4B48D1F604D1F009BF5A3 /* Creature.swift */; };
@@ -67,6 +68,7 @@
 		447C742B1F5DB7350021563F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		447C74381F5DB7B60021563F /* DBLayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DBLayer.swift; sourceTree = "<group>"; };
 		44CF47AD1F61991B00346751 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		44DA92161F7170E700486C77 /* StatisticsConsole.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatisticsConsole.swift; sourceTree = "<group>"; };
 		44F4B4891F604A04009BF5A3 /* SurvivalJungle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SurvivalJungle.swift; sourceTree = "<group>"; };
 		44F4B48B1F604CEB009BF5A3 /* SocialBehavior.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocialBehavior.swift; sourceTree = "<group>"; };
 		44F4B48D1F604D1F009BF5A3 /* Creature.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Creature.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 		447C74021F5DB7350021563F /* Survive */ = {
 			isa = PBXGroup;
 			children = (
+				44DA92151F7170BF00486C77 /* Console */,
 				44CF47AC1F6198CB00346751 /* Routine */,
 				447C74371F5DB7B60021563F /* Model */,
 				447C74031F5DB7350021563F /* AppDelegate.swift */,
@@ -193,6 +196,14 @@
 				44CF47AD1F61991B00346751 /* Extensions.swift */,
 			);
 			name = Routine;
+			sourceTree = "<group>";
+		};
+		44DA92151F7170BF00486C77 /* Console */ = {
+			isa = PBXGroup;
+			children = (
+				44DA92161F7170E700486C77 /* StatisticsConsole.swift */,
+			);
+			name = Console;
 			sourceTree = "<group>";
 		};
 		E31519B4C10260C0F6B1CA30 /* Pods */ = {
@@ -502,6 +513,7 @@
 				447C74041F5DB7350021563F /* AppDelegate.swift in Sources */,
 				44F4B4901F604D64009BF5A3 /* Challenge.swift in Sources */,
 				447C74391F5DB7B60021563F /* DBLayer.swift in Sources */,
+				44DA92171F7170E700486C77 /* StatisticsConsole.swift in Sources */,
 				44F4B48A1F604A04009BF5A3 /* SurvivalJungle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
