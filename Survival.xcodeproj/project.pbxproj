@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4398ED884EE5DB8CE9901F67 /* Pods_Survival.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 46380B6CB1225306CCFEE387 /* Pods_Survival.framework */; };
 		442CC62C1F82264800119A1D /* RoutineHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 442CC62B1F82264800119A1D /* RoutineHelper.swift */; };
+		4436F65D1F8FB79B00B22324 /* Methodology.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4436F65C1F8FB79B00B22324 /* Methodology.swift */; };
 		44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289BE1F7174E500825BD4 /* AppDelegate.swift */; };
 		44B289C11F7174E500825BD4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289C01F7174E500825BD4 /* ViewController.swift */; };
 		44B289C41F7174E500825BD4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44B289C21F7174E500825BD4 /* Main.storyboard */; };
@@ -51,6 +52,7 @@
 		33DD4E7982AA8074E3751E01 /* Pods-SurvivalTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SurvivalTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SurvivalTests/Pods-SurvivalTests.release.xcconfig"; sourceTree = "<group>"; };
 		3B7E40393E8282C31093FCB3 /* Pods_SurvivalUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SurvivalUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		442CC62B1F82264800119A1D /* RoutineHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineHelper.swift; sourceTree = "<group>"; };
+		4436F65C1F8FB79B00B22324 /* Methodology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology.swift; sourceTree = "<group>"; };
 		44B289BB1F7174E500825BD4 /* Survival.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Survival.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B289BE1F7174E500825BD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		44B289C01F7174E500825BD4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -177,6 +179,7 @@
 				44ED56C61F7BF2DB0049CBCF /* Creature.swift */,
 				44ED56C81F7BF2DB0049CBCF /* SocialBehavior.swift */,
 				44ED56C91F7BF2DB0049CBCF /* SurvivalJungle.swift */,
+				4436F65C1F8FB79B00B22324 /* Methodology.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -509,6 +512,7 @@
 				44ED56CB1F7BFA740049CBCF /* SocialBehavior.swift in Sources */,
 				44ED56C11F7B82550049CBCF /* LineChartStaticsViewController.swift in Sources */,
 				44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */,
+				4436F65D1F8FB79B00B22324 /* Methodology.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
