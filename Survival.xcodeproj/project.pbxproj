@@ -25,6 +25,7 @@
 		44ED56CC1F7BFA7D0049CBCF /* Creature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ED56C61F7BF2DB0049CBCF /* Creature.swift */; };
 		44ED56CD1F7BFA800049CBCF /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ED56C51F7BF2DB0049CBCF /* Challenge.swift */; };
 		44ED56CF1F7BFAF40049CBCF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ED56CE1F7BFAF00049CBCF /* Extensions.swift */; };
+		44FCB6AC1F964A740081EB41 /* CreatureMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FCB6AB1F964A740081EB41 /* CreatureMemory.swift */; };
 		5B207725623E8162BEE98577 /* Pods_SurvivalTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 46E71F0831847E4F37116A92 /* Pods_SurvivalTests.framework */; };
 		6A03BCFDFA2B75B13A49DACB /* Pods_SurvivalUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B7E40393E8282C31093FCB3 /* Pods_SurvivalUITests.framework */; };
 /* End PBXBuildFile section */
@@ -72,6 +73,7 @@
 		44ED56C81F7BF2DB0049CBCF /* SocialBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialBehavior.swift; sourceTree = "<group>"; };
 		44ED56C91F7BF2DB0049CBCF /* SurvivalJungle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalJungle.swift; sourceTree = "<group>"; };
 		44ED56CE1F7BFAF00049CBCF /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		44FCB6AB1F964A740081EB41 /* CreatureMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatureMemory.swift; sourceTree = "<group>"; };
 		46380B6CB1225306CCFEE387 /* Pods_Survival.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Survival.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		46E71F0831847E4F37116A92 /* Pods_SurvivalTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SurvivalTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9678F1AEC570C74CA33B6609 /* Pods-Survival.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Survival.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Survival/Pods-Survival.debug.xcconfig"; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				44ED56C81F7BF2DB0049CBCF /* SocialBehavior.swift */,
 				44ED56C91F7BF2DB0049CBCF /* SurvivalJungle.swift */,
 				4436F65C1F8FB79B00B22324 /* Methodology.swift */,
+				44FCB6AB1F964A740081EB41 /* CreatureMemory.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -280,7 +283,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0830;
 				LastUpgradeCheck = 0900;
-				ORGANIZATIONNAME = GINOF;
+				ORGANIZATIONNAME = GINOFF;
 				TargetAttributes = {
 					44B289BA1F7174E500825BD4 = {
 						CreatedOnToolsVersion = 8.3.1;
@@ -511,6 +514,7 @@
 				442CC62C1F82264800119A1D /* RoutineHelper.swift in Sources */,
 				44ED56CB1F7BFA740049CBCF /* SocialBehavior.swift in Sources */,
 				44ED56C11F7B82550049CBCF /* LineChartStaticsViewController.swift in Sources */,
+				44FCB6AC1F964A740081EB41 /* CreatureMemory.swift in Sources */,
 				44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */,
 				4436F65D1F8FB79B00B22324 /* Methodology.swift in Sources */,
 			);

@@ -3,7 +3,7 @@
 //  Survival
 //
 //  Created by YANGWEI on 12/10/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import Foundation
@@ -53,7 +53,7 @@ class FindCoWorkerMethodology_OpenNice:FindCoWorkerMethodology{
     override func findCoWorker(candidate creatures:inout [Creature], memory:CreatureMemory) -> FindCoWorkerMethodologyResult{
         var coWorkCreature:Creature?
         
-        if let newFriend = memory.findNiceGuyFromCandidate(candidate: &creatures){
+        if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
             coWorkCreature = newFriend
         }else {
             coWorkCreature = creatures.randomPick()
@@ -70,7 +70,7 @@ class FindCoWorkerMethodology_OpenSelfish:FindCoWorkerMethodology{
     override func findCoWorker(candidate creatures:inout [Creature], memory:CreatureMemory) -> FindCoWorkerMethodologyResult{
         var coWorkCreature:Creature?
         
-        if let newFriend = memory.findNiceGuyFromCandidate(candidate: &creatures){
+        if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
             coWorkCreature = newFriend
         }else {
             coWorkCreature = creatures.randomPick()
@@ -89,7 +89,7 @@ class FindCoWorkerMethodology_ConservativeSelfish:FindCoWorkerMethodology{
         
         if let oldFriend = memory.findOneFriendFromCandidate(candidate: &creatures){
             coWorkCreature = oldFriend
-        }else if let newFriend = memory.findNiceGuyFromCandidate(candidate: &creatures){
+        }else if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
             coWorkCreature = newFriend
         }else {
             coWorkCreature = creatures.randomPick()
@@ -108,7 +108,7 @@ class FindCoWorkerMethodology_ConservativeFriendly:FindCoWorkerMethodology{
         
         if let oldFriend = memory.findOneFriendFromCandidate(candidate: &creatures){
             coWorkCreature = oldFriend
-        }else if let newFriend = memory.findNiceGuyFromCandidate(candidate: &creatures){
+        }else if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
             coWorkCreature = newFriend
         }else {
             coWorkCreature = creatures.randomPick()
@@ -127,7 +127,7 @@ class FindCoWorkerMethodology_DisguiseForSomeTime:FindCoWorkerMethodology{
         
         if let oldFriend = memory.findOneFriendFromCandidate(candidate: &creatures){
             coWorkCreature = oldFriend
-        }else if let newFriend = memory.findNiceGuyFromCandidate(candidate: &creatures){
+        }else if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
             coWorkCreature = newFriend
         }else {
             coWorkCreature = creatures.randomPick()
@@ -145,6 +145,33 @@ class FindCoWorkerMethodology_DisguiseForSomeTime:FindCoWorkerMethodology{
         return FindCoWorkerMethodologyResult(WorkingPartner:nil, WorkingAttitude: .selfish)
     }
 }
+
+class FindCoWorkerMethodology_TrustBestFriend:FindCoWorkerMethodology{
+    override func findCoWorker(candidate creatures:inout [Creature], memory:CreatureMemory) -> FindCoWorkerMethodologyResult{
+        var coWorkCreature:Creature?
+        let oldFriends = memory.thinkOfCreatureScores()
+        if let bestFriendID = oldFriends.sorted(by: { (arg0, arg1) -> Bool in
+            let (_, score2) = arg1
+            let (_, score1) = arg0
+            return score1 > score2
+        }).first(where: { (arg0) -> Bool in
+            let (creatureID, _) = arg0
+            return nil != creatures.findCreatureBy(uniqueID: creatureID)
+        })?.key {
+            coWorkCreature = creatures.findCreatureBy(uniqueID: bestFriendID)
+        }else if let newFriend = memory.findNotBadGuyFromCandidate(candidate: &creatures){
+            coWorkCreature = newFriend
+        }else {
+            coWorkCreature = creatures.randomPick()
+        }
+        
+        if let foundCoworker = coWorkCreature {
+            return FindCoWorkerMethodologyResult(WorkingPartner: foundCoworker, WorkingAttitude: .helpOther)
+        }
+        return FindCoWorkerMethodologyResult(WorkingPartner:nil, WorkingAttitude: .selfish)
+    }
+}
+
 
 struct ResponseCoWorkerMethodologyResult{
     var WorkingPartner:Creature? // Ceature may work alone, without a partner
@@ -173,19 +200,37 @@ class ResponseCoWorkerMethodology_AlwaysSelfish:ResponseCoWorkerMethodology{
 
 class ResponseCoWorkerMethodology_TitForTat:ResponseCoWorkerMethodology{
     override func responseCoWorker(to AnotherCreature:Creature, memory:CreatureMemory) -> ResponseCoWorkerMethodologyResult{
-        var workAction = memory.thinkOf(AnotherCreature: AnotherCreature)
-        if workAction == .none {
+        let workAction:WorkAttitude
+        if memory.thinkScoreOf(AnotherCreatureID: AnotherCreature.identifier.uniqueID) >= 0 {
             workAction = .helpOther
+        }else {
+            workAction = .selfish
         }
         return ResponseCoWorkerMethodologyResult(WorkingPartner:AnotherCreature, WorkingAttitude: workAction)
     }
 }
 
-class ResponseCoWorkerMethodology_SelfishTitForTat:ResponseCoWorkerMethodology{
+class ResponseCoWorkerMethodology_ConservativeTitForTat:ResponseCoWorkerMethodology{
     override func responseCoWorker(to AnotherCreature:Creature, memory:CreatureMemory) -> ResponseCoWorkerMethodologyResult{
-        var workAction = memory.thinkOf(AnotherCreature: AnotherCreature)
-        if workAction == .none {
+        let workAction:WorkAttitude
+        if memory.thinkScoreOf(AnotherCreatureID: AnotherCreature.identifier.uniqueID) > 0 {
+            workAction = .helpOther
+        }else {
             workAction = .selfish
+        }
+        return ResponseCoWorkerMethodologyResult(WorkingPartner:AnotherCreature, WorkingAttitude: workAction)
+    }
+}
+
+class ResponseCoWorkerMethodology_OnceBadAlwaysBad:ResponseCoWorkerMethodology{
+    override func responseCoWorker(to AnotherCreature:Creature, memory:CreatureMemory) -> ResponseCoWorkerMethodologyResult{
+        let workAction:WorkAttitude
+        let impressions = memory.thinkOfWorkAction(from: AnotherCreature.identifier.uniqueID)
+        
+        if impressions.first(where: {$0.Attitude == .selfish}) != nil {
+            workAction = .selfish
+        }else {
+            workAction = .helpOther
         }
         return ResponseCoWorkerMethodologyResult(WorkingPartner:AnotherCreature, WorkingAttitude: workAction)
     }
@@ -215,12 +260,16 @@ class TalkMethodology_TellEveryOne:TalkMethodology{
                        memory:CreatureMemory,
                        tellBlock:(_ Creature:Creature, _ AnotherCreatureID:String, _ Behavior:WorkAttitude) -> Void){
         //Always tell others truth
-        if let OldFriendID = memory.thinkOfOneRandomFriendID(), OldFriendID != creature.identifier.uniqueID{
-            tellBlock(creature, OldFriendID, memory.thinkOf(AnotherCreatureID: OldFriendID))
+        if let OldFriendID = memory.thinkOfOneRandomFriendID(),
+            OldFriendID != creature.identifier.uniqueID,
+            let behaviour = memory.thinkOfLastWorkActionImpression(from: OldFriendID)?.Attitude{
+            tellBlock(creature, OldFriendID, behaviour)
         }
         
-        if let OldEnemyID = memory.thinkOfOneRandomEnemyID(), OldEnemyID != creature.identifier.uniqueID{
-            tellBlock(creature, OldEnemyID, memory.thinkOf(AnotherCreatureID: OldEnemyID))
+        if let OldEnemyID = memory.thinkOfOneRandomEnemyID(),
+            OldEnemyID != creature.identifier.uniqueID,
+            let behaviour = memory.thinkOfLastWorkActionImpression(from: OldEnemyID)?.Attitude{
+            tellBlock(creature, OldEnemyID, behaviour)
         }
     }
 }
@@ -231,12 +280,16 @@ class TalkMethodology_OnlyTellFriends:TalkMethodology{
                        memory:CreatureMemory,
                        tellBlock:(_ Creature:Creature, _ AnotherCreatureID:String, _ Behavior:WorkAttitude) -> Void){
         if result == .doubleWin || result == .exploitation{ //The partner seems to be a nice one, tell him some thing
-            if let OldFriendID = memory.thinkOfOneRandomFriendID(), OldFriendID != creature.identifier.uniqueID{
-                tellBlock(creature, OldFriendID, memory.thinkOf(AnotherCreatureID: OldFriendID))
+            if let OldFriendID = memory.thinkOfOneRandomFriendID(),
+                OldFriendID != creature.identifier.uniqueID,
+                let behaviour = memory.thinkOfLastWorkActionImpression(from: OldFriendID)?.Attitude{
+                tellBlock(creature, OldFriendID, behaviour)
             }
             
-            if let OldEnemyID = memory.thinkOfOneRandomEnemyID(), OldEnemyID != creature.identifier.uniqueID{
-                tellBlock(creature, OldEnemyID, memory.thinkOf(AnotherCreatureID: OldEnemyID))
+            if let OldEnemyID = memory.thinkOfOneRandomEnemyID(),
+                OldEnemyID != creature.identifier.uniqueID,
+                let behaviour = memory.thinkOfLastWorkActionImpression(from: OldEnemyID)?.Attitude{
+                tellBlock(creature, OldEnemyID, behaviour)
             }
         }
     }
@@ -269,6 +322,24 @@ class ListenMethodology{
     }
 }
 
+class ListenMethodology_TrustFriendsAndStranger:ListenMethodology{
+    override func listen(from creature:Creature,
+                         about anotherCreatureID:String,
+                         behavior:WorkAttitude,
+                         memory:CreatureMemory,
+                         listenBlock:(_ creature:Creature, _ anotherCreatureID:String, _ behavior:WorkAttitude, _ story:String) -> Void){
+        //Trust everyone
+        var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
+        if memory.thinkScoreOf(AnotherCreatureID: creature.identifier.uniqueID) >= 0 {
+            story += ". Looks like this creature was not bad, trust it"
+            memory.remember(AnotherCreatureID: anotherCreatureID, Attitude: behavior)
+        }else{
+            story += ". Looks like this creature wasn't nice, don't trust it"
+        }
+        listenBlock(creature, anotherCreatureID, behavior, story)
+    }
+}
+
 class ListenMethodology_OnlyTrustFriends:ListenMethodology{
     override func listen(from creature:Creature,
                          about anotherCreatureID:String,
@@ -277,16 +348,17 @@ class ListenMethodology_OnlyTrustFriends:ListenMethodology{
                          listenBlock:(_ creature:Creature, _ anotherCreatureID:String, _ behavior:WorkAttitude, _ story:String) -> Void){
         //Trust everyone
         var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
-        if (memory.thinkOf(AnotherCreature: creature) == .helpOther) {
-            story += ". Looks like this creature was nice, trust it"
-            memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        if memory.thinkScoreOf(AnotherCreatureID: creature.identifier.uniqueID) > 0 {
+            story += ". Looks like this creature was not bad, trust it"
+            memory.remember(AnotherCreatureID: anotherCreatureID, Attitude: behavior)
         }else{
             story += ". Looks like this creature wasn't nice, don't trust it"
         }
         listenBlock(creature, anotherCreatureID, behavior, story)
     }
-
 }
+
+
 
 class ListenMethodology_TrustEveryOne:ListenMethodology{
     override func listen(from creature:Creature,
@@ -297,7 +369,7 @@ class ListenMethodology_TrustEveryOne:ListenMethodology{
         //Trust no one
         var story = "Been told from "+creature.identifier.uniqueID+" about "+anotherCreatureID+"'s behavior:"+behavior.rawValue
         story += ", and trust it"
-        memory.remember(AnotherCreatureID: anotherCreatureID, Behavior: behavior)
+        memory.remember(AnotherCreatureID: anotherCreatureID, Attitude: behavior)
         listenBlock(creature, anotherCreatureID, behavior, story)
     }
     

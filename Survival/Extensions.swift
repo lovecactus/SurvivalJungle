@@ -3,12 +3,12 @@
 //  Survive
 //
 //  Created by YANGWEI on 07/09/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import Foundation
 
-extension MutableCollection where Indices.Iterator.Element == Index {
+extension MutableCollection {
     /// Shuffles the contents of this collection.
     mutating func shuffle() {
         let c = count
@@ -54,6 +54,25 @@ extension Sequence {
     func shuffled() -> [Iterator.Element] {
         var result = Array(self)
         result.shuffle()
+        return result
+    }
+}
+
+protocol OptionalType {
+    associatedtype Wrapped
+    func map<U>(_ f: (Wrapped) throws -> U) rethrows -> U?
+}
+
+extension Optional: OptionalType {}
+
+extension Sequence where Iterator.Element: OptionalType {
+    func removeNils() -> [Iterator.Element.Wrapped] {
+        var result: [Iterator.Element.Wrapped] = []
+        for element in self {
+            if let element = element.map({ $0 }) {
+                result.append(element)
+            }
+        }
         return result
     }
 }

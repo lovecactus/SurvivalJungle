@@ -3,7 +3,7 @@
 //  Survive
 //
 //  Created by YANGWEI on 06/09/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import Foundation
@@ -31,45 +31,45 @@ struct SurvivalStatistic{
 }
 
 class SurvivalJungle {
-    var JungleTotalResource:Double
-    var SeasonNumber:Int
-    var CreatureNumber:Int
+    var jungleTotalResource:RewardResource
+    var seasonNumber:Int
+    var creatureNumber:Int
     
-    var SurviveChallenge:Challenge = Challenge()
-    var AllCreatures:[Creature] = []
-    var DiedCreatures:[Creature] = []
-    var Social = SocialBehavior()
+    var surviveChallenge:Challenge = Challenge()
+    var allCreatures:[Creature] = []
+    var diedCreatures:[Creature] = []
+    var social:SocialBehavior? = nil
     
-    var Statistic:[SurvivalStatistic] = []
+    var statistic:[SurvivalStatistic] = []
     
-    init(totalResource:Double, seasonNumber:Int, creatureNumber:Int) {
-        JungleTotalResource = totalResource
-        SeasonNumber = seasonNumber
-        CreatureNumber = creatureNumber
+    init(totalResource:Double, totalSeasonNumber:Int, averageCreatureNumber:Int) {
+        jungleTotalResource = totalResource
+        seasonNumber = totalSeasonNumber
+        creatureNumber = averageCreatureNumber
         self.initialCreatureGroup()
     }
     
     func initialCreatureGroup() {
-        for index in 1...CreatureNumber {
-            AllCreatures.append(OpenBadCreature(familyName: "OpenBad", givenName: String(index), age:Int(arc4random_uniform(50))))
+        for index in 1...creatureNumber {
+            allCreatures.append(OpenBadCreature(familyName: "OpenBad", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(ConservativeBadCreature(familyName: "ConservativeBad", givenName: String(index), age:Int(arc4random_uniform(50))))
+        for index in 1...creatureNumber {
+            allCreatures.append(ConservativeBadCreature(familyName: "ConservativeBad", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(StrategyBadCreature(familyName: "StrategyBad", givenName: String(index), age:Int(arc4random_uniform(50))))
+//        for index in 1...CreatureNumber {
+//            AllCreatures.append(StrategyBadCreature(familyName: "StrategyBad", givenName: String(index), age:Int(arc4random_uniform(50))))
+//        }
+        for index in 1...creatureNumber {
+            allCreatures.append(ConservativeCreature(familyName: "Conservative", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(ConservativeCreature(familyName: "Conservative", givenName: String(index), age:Int(arc4random_uniform(50))))
+        for index in 1...creatureNumber {
+            allCreatures.append(NiceCreature(familyName: "Nice", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(NiceCreature(familyName: "Nice", givenName: String(index), age:Int(arc4random_uniform(50))))
+        for index in 1...creatureNumber {
+            allCreatures.append(MeanCreature(familyName: "Mean", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(MeanCreature(familyName: "Mean", givenName: String(index), age:Int(arc4random_uniform(50))))
-        }
-        for index in 1...CreatureNumber {
-            AllCreatures.append(SelfishMeanCreature(familyName: "SelfishMean", givenName: String(index), age:Int(arc4random_uniform(50))))
+        for index in 1...creatureNumber {
+            allCreatures.append(SelfishMeanCreature(familyName: "SelfishMean", givenName: String(index), age:Int(arc4random_uniform(50))))
         }
 
     }
@@ -90,13 +90,15 @@ class SurvivalJungle {
     }
     
     func Working(_ SeasonStatistic:inout SurvivalStatistic) {
-        var AverageResource:Double = Double(Double(JungleTotalResource)/Double(AllCreatures.count))/10
+        let social = SocialBehavior(with: &allCreatures, seasonResource: &jungleTotalResource)
+
+        var AverageResource:Double = Double(Double(jungleTotalResource)/Double(allCreatures.count))/10
         AverageResource = (AverageResource > 10) ? 10 : AverageResource
 
-        let MatchedWorkCooperations = WorkMatchCooperations(AllCreatures: AllCreatures)
+        let MatchedWorkCooperations = WorkMatchCooperations(AllCreatures: allCreatures)
 
         for Cooperation in MatchedWorkCooperations {
-            let CooperationResult = Social.Work(As: Cooperation, AverageResource:AverageResource)
+            let CooperationResult = social.Work(As: Cooperation, AverageResource:AverageResource)
             
             switch CooperationResult.RequestResult {
             case .beenCheated,.exploitation:
@@ -130,15 +132,9 @@ class SurvivalJungle {
     }
     
 
-    func Thinking() {
-        AllCreatures.forEach { (Creature) in
-            Creature.thinking()
-        }
-    }
-
     func CreturesSurvival() {
         var FailedCreature:[Creature] = []
-        AllCreatures = AllCreatures.filter({ (ChallengingCreature:Creature) -> Bool in
+        allCreatures = allCreatures.filter({ (ChallengingCreature:Creature) -> Bool in
             if ChallengingCreature.surviveChallenge() {
                 return true
             }
@@ -146,11 +142,11 @@ class SurvivalJungle {
             return false
         })
         
-        DiedCreatures.append(contentsOf: FailedCreature)
+        diedCreatures.append(contentsOf: FailedCreature)
     }
 
     func CreturesAging() {
-        AllCreatures.forEach { (Creature) in
+        allCreatures.forEach { (Creature) in
             Creature.aging()
         }
     }
@@ -158,66 +154,65 @@ class SurvivalJungle {
     func CreturesReproduction(_ SeasonStatistic:inout SurvivalStatistic) {
         var NewBornCreatures:[Creature] = []
         
-        AllCreatures.forEach { (Creature) in
+        allCreatures.forEach { (Creature) in
             if let NewBornCreature = Creature.selfReproduction(){
                 NewBornCreatures.append(NewBornCreature)
                 SeasonStatistic.NewBorn += 1
             }
         }
         
-        AllCreatures.append(contentsOf: NewBornCreatures)
+        allCreatures.append(contentsOf: NewBornCreatures)
     }
 
     func SurviveStart() -> [SurvivalStatistic]{
         //Check if a creature is about to die or reproduction
-        for season in 1...SeasonNumber{
+        for season in 1...seasonNumber{
             var SeasonStatistic = SurvivalStatistic()
             self.Working(&SeasonStatistic)
             self.CreturesReproduction(&SeasonStatistic)
             self.CreturesSurvival()
             self.CreturesAging()
-            self.Thinking()
             self.SurviveCreaturesStatistic(season,SeasonStatistic:&SeasonStatistic)
-            Statistic.append(SeasonStatistic)
+            statistic.append(SeasonStatistic)
         }
-        return Statistic
+        return statistic
     }
     
     func SurviveCreaturesStatistic(_ season:Int, SeasonStatistic:inout SurvivalStatistic){
-        let creatureResources:[Double] = AllCreatures.map { (Creature) -> Double in
+        let creatureResources:[Double] = allCreatures.map { (Creature) -> Double in
             return Creature.SurviveResource
         }
         
-        let survivedNiceCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedNiceCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is NiceCreature
         }
         
-        let survivedConservativeCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedConservativeCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is ConservativeCreature
         }
         
-        let survivedOpenBadCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedOpenBadCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is OpenBadCreature
         }
 
-        let survivedStrategyBadCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedStrategyBadCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is StrategyBadCreature
         }
 
-        let survivedConservativeBadCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedConservativeBadCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is ConservativeBadCreature
         }
         
-        let survivedMeanCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedMeanCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is MeanCreature
         }
 
-        let survivedSelfishMeanCreature = AllCreatures.filter { (Creature) -> Bool in
+        let survivedSelfishMeanCreature = allCreatures.filter { (Creature) -> Bool in
             return Creature is SelfishMeanCreature
         }
 
-        SeasonStatistic.Total = AllCreatures.count
-        SeasonStatistic.Died = DiedCreatures.count
+        SeasonStatistic.Total = allCreatures.count
+        SeasonStatistic.Died = diedCreatures.count
         SeasonStatistic.Nice = survivedNiceCreature.count
         SeasonStatistic.Conservative = survivedConservativeCreature.count
         SeasonStatistic.OpenBad = survivedOpenBadCreature.count
@@ -247,6 +242,24 @@ class SurvivalJungle {
         print ("group resource:", creatureResources.reduce(0, +), "average resource:",creatureResources.average)
     }
     
+    func SandboxStart(){
+        allCreatures = []
+        for index in 1...creatureNumber {
+            allCreatures.append(Creature(familyName: "Test", givenName: String(index), age: Int(arc4random_uniform(50))))
+        }
+        
+        for _ in 1...seasonNumber{
+            var SeasonStatistic = SurvivalStatistic()
+            var seasonResource = jungleTotalResource
+            let social = SocialBehavior(with: &allCreatures, seasonResource:&seasonResource)
+            social.TeamWork()
+            self.CreturesReproduction(&SeasonStatistic)
+            self.CreturesSurvival()
+            self.CreturesAging()
+            statistic.append(SeasonStatistic)
+        }
+    }
+
 }
 
 
@@ -265,9 +278,26 @@ extension Array where Element : Creature {
             return DieCreature.Story.last == DieReason
         })
     }
-    func findCreature(By Name:String) -> Creature? {
+    func findCreatureBy(name:String) -> Creature? {
         return self.first(where:{ (FindCreature) -> Bool in
-            return (FindCreature.identifier.familyName+FindCreature.identifier.givenName == Name)
+            return (FindCreature.identifier.familyName+FindCreature.identifier.givenName == name)
+        })
+    }
+    mutating func removeFirstCreatureBy(uniqueID:String) -> Bool {
+        var findCreatures = false
+        for index in 0...self.count-1 {
+            if (self[index].identifier.uniqueID == uniqueID){
+                self.remove(at: index)
+                findCreatures = true
+                break
+            }
+        }
+        return findCreatures
+    }
+
+    func findCreatureBy(uniqueID:String) -> Creature? {
+        return self.first(where:{ (FindCreature) -> Bool in
+            return (FindCreature.identifier.uniqueID == uniqueID)
         })
     }
 

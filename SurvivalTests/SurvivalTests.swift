@@ -3,7 +3,7 @@
 //  SurvivalTests
 //
 //  Created by YANGWEI on 19/09/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import XCTest

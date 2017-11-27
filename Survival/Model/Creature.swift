@@ -3,7 +3,7 @@
 //  Survive
 //
 //  Created by YANGWEI on 06/09/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import Foundation
@@ -23,23 +23,25 @@ protocol CommunicationProtocol {
     func talk(to creature:Creature, after result:WorkResult)
 }
 
+typealias CreatureUniqueID = String
+
 struct Identifer {
     let familyName:String
     let givenName:String
     let bornTime:TimeInterval
-    var uniqueID: String {
+    var uniqueID: CreatureUniqueID {
         return familyName+givenName+"-"+String(Int(bornTime))
     }
 }
 
 class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
-    public var SurviveResource:Double = 0
+    public var SurviveResource:WorkingCostResource = 0
     public let identifier:Identifer
     var Age:Int = 0
     let ReproductionAge:Int = 20
     let ReproductionCost:Double = 20
-    let CreatureReproductionScore:Double = 50
-    let CreatureSurviveScore:Double = -50
+    let CreatureReproductionScore:Double = 500
+    let CreatureSurviveScore:Double = -500
     let DieForAge:Int = 100
     public var Story:[String] = []
     var Memory = CreatureMemory()
@@ -86,7 +88,7 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
         let RequestResult = CooperationResult.RequestResult
         if let ResponseWorkAction = Cooperation.ResponseWorkAction,
             let AnotherCreature = RequestWorkAction.WorkingPartner {
-            self.Memory.remember(AnotherCreature:ResponseWorkAction.Worker, Behavior:ResponseWorkAction.WorkingAttitude)
+            self.Memory.remember(ResponseWorkAction)
             
             let WorkReword = SocialBehavior.WorkReword(of:RequestResult, harvestResource: CooperationResult.HarvestResource)
             SurviveResource += WorkReword
@@ -114,23 +116,20 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
         }
         let RequestWorkAction = Cooperation.RequestWorkAction
 
-        self.Memory.remember(AnotherCreature:AnotherCreature, Behavior:RequestWorkAction.WorkingAttitude)
+        self.Memory.remember(RequestWorkAction)
         
-        SurviveResource += SocialBehavior.WorkReword(of:ResponseResult, harvestResource: CooperationResult.HarvestResource)
+        let WorkReword = SocialBehavior.WorkReword(of:ResponseResult, harvestResource: CooperationResult.HarvestResource)
+        SurviveResource += WorkReword
         var story = "Response work with "+AnotherCreature.identifier.uniqueID+","
         story += " "+ResponseWorkAction.WorkingAttitude.rawValue+" VS "+RequestWorkAction.WorkingAttitude.rawValue
         story += ", result:"+ResponseResult.rawValue
+        story += " reward:"+String(WorkReword)
         story += " resource:"+String(SurviveResource)
         writeStory(story)
     }
-    
 
     func writeStory(_ NewStory:String) {
         Story.append("Age:"+String(Age)+":"+NewStory)
-    }
-    
-    func thinking() {
-        Memory.thinking()
     }
     
     func aging(){
@@ -147,9 +146,8 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
             SurviveResource -= ReproductionCost
             writeStory("Born a new herit")
             if let NewBornCreature = ReproductionBlock() {
-                NewBornCreature.Memory = CreatureMemory()
-                NewBornCreature.Memory.behaviorMemory = self.Memory.memoryInherit()
-                NewBornCreature.writeStory("Inherit memory from parent:"+NewBornCreature.Memory.behaviorMemory.description)
+                NewBornCreature.Memory = self.Memory.memoryInherit()
+                NewBornCreature.writeStory("Inherit memory from parent:"+NewBornCreature.Memory.workActionImpressionMemory.description)
                 return NewBornCreature
             }else{
                 print (#function+" reproduction error!")
@@ -171,6 +169,45 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
             return false
         }
         return true
+    }
+    
+    func TeamPropose(from creatures:[Creature]) -> TeamWorkCooperation? {
+        if arc4random_uniform(10)>6 {
+            var teamMembers:[CreatureUniqueID] = []
+            if let otherMemberCandidates = creatures.randomPick(some: 10) {
+                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
+                    return creature.identifier.uniqueID
+                }))
+            }
+            let teamProposal = CooperationTeam(TeamLeaderID: self.identifier.uniqueID, OtherMemberIDs: teamMembers)
+            let currentTeam = CooperationTeam(TeamLeaderID: self.identifier.uniqueID, OtherMemberIDs: [])
+            self.Memory.isAssamblingTeam = true
+            return TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
+            
+        }else{
+            self.Memory.isAssamblingTeam = false
+            return nil
+        }
+    }
+    
+    func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        if self.Memory.isAssamblingTeam {
+            return nil
+        }
+        return teams.randomPick()
+    }
+    
+    func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        let averageSplitReward = Reward.totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.memberRewards[memberID] = averageSplitReward
+        }
+        Reward.memberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        coopertion.Reward = Reward
     }
     
 }
@@ -196,7 +233,7 @@ class NiceCreature : Creature {
 class ConservativeCreature : Creature{
     override init(familyName: String, givenName: String) {
         super.init(familyName: familyName, givenName:givenName)
-        Method.FindCoWorker = FindCoWorkerMethodology_ConservativeFriendly()
+        Method.FindCoWorker = FindCoWorkerMethodology_TrustBestFriend()
         Method.ResponseCoWorker = ResponseCoWorkerMethodology_AlwaysSelfish()
         Method.Talk = TalkMethodology_OnlyTellFriends()
         Method.Listen = ListenMethodology_OnlyTrustFriends()
@@ -264,7 +301,7 @@ class StrategyBadCreature : Creature {
 class MeanCreature : Creature{
     override init(familyName: String, givenName: String) {
         super.init(familyName: familyName, givenName:givenName)
-        Method.FindCoWorker = FindCoWorkerMethodology_ConservativeFriendly()
+        Method.FindCoWorker = FindCoWorkerMethodology_TrustBestFriend()
         Method.ResponseCoWorker = ResponseCoWorkerMethodology_TitForTat()
         Method.Talk = TalkMethodology_OnlyTellFriends()
         Method.Listen = ListenMethodology_OnlyTrustFriends()
@@ -280,8 +317,8 @@ class MeanCreature : Creature{
 class SelfishMeanCreature : Creature{
     override init(familyName: String, givenName: String) {
         super.init(familyName: familyName, givenName:givenName)
-        Method.FindCoWorker = FindCoWorkerMethodology_ConservativeFriendly()
-        Method.ResponseCoWorker = ResponseCoWorkerMethodology_SelfishTitForTat()
+        Method.FindCoWorker = FindCoWorkerMethodology_TrustBestFriend()
+        Method.ResponseCoWorker = ResponseCoWorkerMethodology_ConservativeTitForTat()
         Method.Talk = TalkMethodology_OnlyTellFriends()
         Method.Listen = ListenMethodology_OnlyTrustFriends()
     }
@@ -294,135 +331,4 @@ class SelfishMeanCreature : Creature{
     
 }
 
-
-class CreatureMemory{
-    public var behaviorMemory:[String:WorkAttitude] = [:]
-
-    public func remember (AnotherCreatureID:String, Behavior:WorkAttitude){
-        behaviorMemory[AnotherCreatureID] = Behavior
-    }
-
-    public func remember (AnotherCreature:Creature, Behavior:WorkAttitude){
-        behaviorMemory[AnotherCreature.identifier.uniqueID] = Behavior
-    }
-    
-    public func forget (AnotherCreatureID : String) {
-        behaviorMemory.removeValue(forKey: AnotherCreatureID)
-    }
-
-    public func thinkOf(AnotherCreatureID : String) -> WorkAttitude {
-        guard let memoryForThisCreature = behaviorMemory[AnotherCreatureID] else {
-            return WorkAttitude.none
-        }
-        return memoryForThisCreature
-    }
-
-    public func thinkOf(AnotherCreature:Creature) -> WorkAttitude {
-        guard let memoryForThisCreature = behaviorMemory[AnotherCreature.identifier.uniqueID] else {
-            return WorkAttitude.none
-        }
-        return memoryForThisCreature
-    }
-
-    public func memoryInherit() -> [String:WorkAttitude] {
-        var NewMemory:[String:WorkAttitude] = [:]
-        let ExpectedRememberMemoryCount = 10
-        for (Key,Value) in behaviorMemory {
-            if Int(arc4random_uniform(UInt32(behaviorMemory.count))) < ExpectedRememberMemoryCount {
-                NewMemory[Key] = Value
-            }
-        }
-        return NewMemory
-    }
-    
-    public func thinkOfOneRandomFriendID() -> String? {
-        let niceMemories = behaviorMemory.filter{$1 == .helpOther}.map { key,action in key}
-        
-        return niceMemories.randomPick()
-    }
-
-    public func thinkOfOneRandomEnemyID() -> String? {
-        let badMemories = behaviorMemory.filter{$1 == .selfish}.map { key,action in key}
-        return badMemories.randomPick()
-    }
-
-    public func findOneFriendFromCandidate(candidate Creatures:inout [Creature]) -> Creature?{
-        while let OldFriendID = self.thinkOfOneRandomFriendID() {
-            var OldFriend:Creature? = nil
-            if let i = Creatures.index(where: { (Creature) -> Bool in
-                return (Creature.identifier.uniqueID == OldFriendID)
-            }){
-                OldFriend = Creatures[i]
-            }
-            
-            
-            if let FindOldFriend = OldFriend {
-                return FindOldFriend
-            }else{
-                self.forget(AnotherCreatureID: OldFriendID)
-            }
-        }
-        return nil
-    }
-    
-    public func findFriendListFromCandidate(candidate Creatures:[Creature]) -> [Creature]{
-        return Creatures.filter { (Creature) -> Bool in
-            return (WorkAttitude.helpOther == self.thinkOf(AnotherCreature: Creature))
-        }
-    }
-    
-    public func findNiceGuyFromCandidate(candidate Creatures:inout [Creature]) -> Creature?{
-        guard Creatures.count > 0 else {
-            return nil
-        }
-        /*
-         return Creatures.filter({ (Creature) -> Bool in
-         return (WorkAction.cheat != self.Memory.thinkOf(AnotherCreature: Creature))
-         }).randomPick()*/
-        
-        let randomIndex = Int(arc4random_uniform(UInt32(Creatures.count)))
-        var randomeNiceGuy:Creature? = nil
-        for index in randomIndex...Creatures.count-1{
-            if WorkAttitude.selfish != self.thinkOf(AnotherCreature: Creatures[index]) {
-                randomeNiceGuy = Creatures[index]
-                break;
-            }
-        }
-        if nil == randomeNiceGuy {
-            for index in 0...randomIndex{
-                if WorkAttitude.selfish != self.thinkOf(AnotherCreature: Creatures[index]) {
-                    randomeNiceGuy = Creatures[index]
-                    break;
-                }
-            }
-        }
-        return randomeNiceGuy
-    }
-
-    public func thinking() {
-    }
-
-}
-
-class DisguiseStrategyMemory:CreatureMemory{
-    let showSelfCount:Int = 3
-    let hideSelfCount:Int = 3
-    var disguiseCounter:Int = 0
-    var currentStrategyAction  = WorkAttitude.helpOther
-
-    override func thinking() {
-        //Think about how to disguise myself
-        disguiseCounter += 1
-        if disguiseCounter < showSelfCount {
-            currentStrategyAction = .helpOther
-        }else if disguiseCounter < showSelfCount+hideSelfCount {
-            currentStrategyAction = .selfish
-        }else {
-            disguiseCounter = 0
-            currentStrategyAction = .helpOther
-        }
-        
-    }
-
-}
 

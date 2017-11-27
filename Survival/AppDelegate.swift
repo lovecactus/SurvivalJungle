@@ -3,7 +3,7 @@
 //  Survival
 //
 //  Created by YANGWEI on 19/09/2017.
-//  Copyright © 2017 GINOF. All rights reserved.
+//  Copyright © 2017 GINOFF. All rights reserved.
 //
 
 import UIKit
@@ -15,13 +15,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        let jungle = SurvivalJungle(totalResource: 5000.0, seasonNumber: 300, creatureNumber: 20)
+        let jungle = SurvivalJungle(totalResource: 300.0, totalSeasonNumber: 500, averageCreatureNumber: 20)
+        jungle.SandboxStart()
+        
         let survivalStatic = jungle.SurviveStart()
         let statisticsVC = LineChartStaticsViewController(Statistic: survivalStatic)
         self.window?.rootViewController = statisticsVC
         Delay(3) {
-            print("Survived:"+String(jungle.AllCreatures.count))
-            print("Died:"+String(jungle.DiedCreatures.count))
+            print("Survived:"+String(jungle.allCreatures.count))
+            print("Died:"+String(jungle.diedCreatures.count))
             print("Check statics")
         }
         return true
