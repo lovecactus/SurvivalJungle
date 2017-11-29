@@ -15,10 +15,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        let jungle = SurvivalJungle(totalResource: 300.0, totalSeasonNumber: 500, averageCreatureNumber: 20)
-        jungle.SandboxStart()
-        
-        let survivalStatic = jungle.SurviveStart()
+        let jungle = SurvivalJungle(totalResource: 500.0, totalSeasonNumber: 100, averageCreatureNumber: 20)
+        let survivalStatic = jungle.SandboxStart()        
+//        let survivalStatic = jungle.SurviveStart()
         let statisticsVC = LineChartStaticsViewController(Statistic: survivalStatic)
         self.window?.rootViewController = statisticsVC
         Delay(3) {

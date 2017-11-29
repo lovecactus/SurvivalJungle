@@ -35,6 +35,7 @@ struct Methodology {
     var ResponseCoWorker:ResponseCoWorkerMethodology = ResponseCoWorkerMethodology()
     var Talk:TalkMethodology = TalkMethodology()
     var Listen:ListenMethodology = ListenMethodology()
+    var TeamUp:TeamUpMethodology = TeamUpMethodology()
 }
 
 struct FindCoWorkerMethodologyResult{
@@ -390,3 +391,43 @@ class ListenMethodology_TrustNoOne:ListenMethodology{
     
 }
 
+class TeamUpMethodology{
+    func TeamPropose(from creature:Creature, on creatures:[Creature]) -> TeamWorkCooperation? {
+        if arc4random_uniform(10)>6 {
+            var teamMembers:[CreatureUniqueID] = []
+            if let otherMemberCandidates = creatures.randomPick(some: 10) {
+                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
+                    return creature.identifier.uniqueID
+                }))
+            }
+            let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
+            let currentTeam = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: [])
+            creature.Memory.isAssamblingTeam = true
+            return TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
+            
+        }else{
+            creature.Memory.isAssamblingTeam = false
+            return nil
+        }
+    }
+    
+    func AcceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        if creature.Memory.isAssamblingTeam {
+            return nil
+        }
+        return teams.randomPick()
+    }
+    
+    func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        let averageSplitReward = Reward.totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.memberRewards[memberID] = averageSplitReward
+        }
+        Reward.memberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        coopertion.Reward = Reward
+    }
+}

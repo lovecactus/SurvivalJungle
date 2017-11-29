@@ -29,9 +29,20 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         self.initialCharts()
         
         ChartView.animate(xAxisDuration: 2.5)
-        self.view = ChartView
         
         ChartView.data = self.setUpStaticsData(SurvivalStatic);
+    }
+    
+    override func viewWillLayoutSubviews() {
+        if #available(iOS 11.0, *) {
+            ChartView.frame.origin.x = ChartView.safeAreaInsets.left
+            ChartView.frame.origin.y = ChartView.safeAreaInsets.top
+            ChartView.frame.size.width = ChartView.bounds.width - ChartView.safeAreaInsets.left - ChartView.safeAreaInsets.right
+            ChartView.frame.size.height = ChartView.bounds.height - ChartView.safeAreaInsets.top - ChartView.safeAreaInsets.bottom
+        } else {
+            // Fallback on earlier versions
+        }
+        self.view = ChartView
     }
     
     override func didReceiveMemoryWarning() {
@@ -63,35 +74,53 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
     
     func setUpStaticsData(_ statistics:[SurvivalStatistic]) -> LineChartData?{
 
-        var openBadValues:[ChartDataEntry] = []
-        var conservativeBadValues:[ChartDataEntry] = []
-        var strategyBadValues:[ChartDataEntry] = []
-        var niceValues:[ChartDataEntry] = []
-        var conservativeValues:[ChartDataEntry] = []
-        var meanValues:[ChartDataEntry] = []
-        var selfishMeanValues:[ChartDataEntry] = []
-
-        for index in 0...statistics.count-1 {
-            
-            openBadValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].OpenBad)))
-            conservativeBadValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].ConservativeBad)))
-            strategyBadValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].StrategyBad)))
-            niceValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Nice)))
-            conservativeValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Conservative)))
-            meanValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].Mean)))
-            selfishMeanValues.append(ChartDataEntry(x: Double(index), y: Double(statistics[index].SelfishMean)))
+        var staticValues:[String:[ChartDataEntry]] = [:]
+        guard let sampleStatistic = statistics.first else {
+            return nil
         }
         
-        let OpenBadDataSet = self.setupDataSet("Open Bad", values: openBadValues, color: .red)
-        let ConservativeBadDataSet = self.setupDataSet("Conservative Bad", values: conservativeBadValues, color: .brown)
-        let StrategyBadDataSet = self.setupDataSet("Strategy Bad", values: strategyBadValues, color: .yellow)
-        let NiceDataSet = self.setupDataSet("Nice", values: niceValues, color: .green)
-        let ConservativeDataSet = self.setupDataSet("Conservative", values: conservativeValues, color: .orange)
-        let MeanDataSet = self.setupDataSet("Mean", values: meanValues, color: .cyan)
-        let SelfishMeanDataSet = self.setupDataSet("Selfish Mean", values: selfishMeanValues, color: .darkGray)
-        let staticDataSets = LineChartData(dataSets: [OpenBadDataSet,ConservativeBadDataSet,StrategyBadDataSet,NiceDataSet,ConservativeDataSet,MeanDataSet,SelfishMeanDataSet])
+        for (key, _) in sampleStatistic {
+            let staticValue:[ChartDataEntry] = []
+            staticValues[key] = staticValue
+        }
+
+        for index in 0...statistics.count-1 {
+            let statistic = statistics[index]
+            for (_, value) in statistic.enumerated() {
+                staticValues[value.key]?.append(ChartDataEntry(x: Double(index), y: value.value))
+            }
+            
+        }
+
+        var staticDataSets:[LineChartDataSet] = []
+        for (index, staticValue) in staticValues.enumerated() {
+            let color:UIColor
+            switch index {
+            case 0:
+                color = .red
+                break
+            case 1:
+                color = .blue
+                break
+            case 2:
+                color = .yellow
+                break
+            case 3:
+                color = .green
+                break
+            case 4:
+                color = .brown
+                break
+            case 5:
+                color = .orange
+                break
+            default:
+                color = .black
+            }
+            staticDataSets.append(self.setupDataSet(staticValue.key, values: staticValue.value, color: color))
+        }
         
-        return staticDataSets
+        return LineChartData(dataSets: staticDataSets)
     }
     
     func setupDataSet(_ name:String, values:[ChartDataEntry], color:UIColor) -> LineChartDataSet{

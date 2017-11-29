@@ -8,99 +8,23 @@
 
 import Foundation
 
-typealias RewardResource = Double
-typealias WorkingCostResource = RewardResource
-
-let teamWorkBaseReword:RewardResource = 20
-let workingBaseCost:WorkingCostResource = 10
-
-enum WorkAttitude:String{
-    case helpOther
-    case selfish
-    case none
-}
-
-struct WorkAction{
-    var Worker:Creature
-    var WorkingPartner:Creature? // Ceature may work alone, without a partner
-    var WorkingAttitude:WorkAttitude
-}
-
-struct WorkCooperation{
-    var RequestWorkAction:WorkAction
-    var ResponseWorkAction:WorkAction?
-}
-
-struct WorkCooperationResult{
-    let HarvestResource:Double
-    var RequestResult:WorkResult
-    var ResponseResult:WorkResult?
-}
-
-enum WorkResult:String{
-    case doubleWin
-    case exploitation
-    case beenCheated
-    case doubleLose
-    case stayAlone
-}
-
-
-
-struct CooperationTeam {
-    var TeamLeaderID:CreatureUniqueID
-    var OtherMemberIDs:[CreatureUniqueID]
-    func isSignle() -> Bool {
-        return OtherMemberIDs.count == 0
-    }
-}
-
-struct CooperationAction {
-    var memberActions:[CreatureUniqueID:TeamCooperationEffort]
-}
-
-struct CooperationGoal {
-    var Succeed:Bool
-}
-
-enum TeamCooperationEffort {
-    case Corruption
-    case Lazy
-    case Responsive
-    case AllIn
-}
-
-struct CooperationReward {
-    var totalRewards:RewardResource
-    var memberRewards:[CreatureUniqueID:RewardResource]
-}
-
-struct TeamWorkCooperation{
-    init(Team:CooperationTeam, TeamProposal:CooperationTeam) {
-        Goal = CooperationGoal(Succeed: false)
-        Action = nil
-        Reward = nil
-        self.Team = Team
-        self.TeamProposal = TeamProposal
-    }
-    var Goal:CooperationGoal
-    var Team:CooperationTeam
-    var TeamProposal:CooperationTeam
-    var Action:CooperationAction?
-    var Reward:CooperationReward?
-}
+typealias SurvivalResource = Double
+typealias RewardResource = SurvivalResource
+typealias WorkingCostResource = SurvivalResource
 
 class SocialBehavior {
     var creatures:[Creature]
     var seasonResource:RewardResource
-    
-    init(with creatures:inout [Creature], seasonResource:inout RewardResource) {
+    var statistic:SurvivalStatistic = SurvivalStatistic()
+
+    init(with creatures:[Creature], seasonResource:inout RewardResource) {
         self.creatures = creatures
         self.seasonResource = seasonResource
     }
 
     func TeamWork() {
         var cooperations:[TeamWorkCooperation] = self.TeamUp(by: self.AssambleTeams())
+        statistic["TeamCount"] = Double(cooperations.count)
         self.TeamCompetes(&cooperations)
         for index in cooperations.indices{
             self.Work(as: &(cooperations[index]))
@@ -196,10 +120,12 @@ class SocialBehavior {
         }
         
         cooperation.Reward = CooperationReward(totalRewards: totalReward, memberRewards: [:])
-        creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID)?.SurviveResource -= workingBaseCost
+        statistic["TotalReward"] = statistic.getStatstic(for: "TotalReward") + Double(cooperation.Reward?.totalRewards ?? 0)
+        creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID)?.WorkCost(teamWorkBaseCost)
         for memberID in cooperation.Team.OtherMemberIDs {
-            creatures.findCreatureBy(uniqueID: memberID)?.SurviveResource -= workingBaseCost
+            creatures.findCreatureBy(uniqueID: memberID)?.WorkCost(teamWorkBaseCost)
         }
+        
     }
     
     func TeamCompetes(_ cooperations:inout [TeamWorkCooperation]){
@@ -216,59 +142,70 @@ class SocialBehavior {
         
         if let rewardAssignment = cooperation.Reward {
             for (memberID, rewardResource) in rewardAssignment.memberRewards {
-                creatures.findCreatureBy(uniqueID: memberID)?.SurviveResource += rewardResource
+                creatures.findCreatureBy(uniqueID: memberID)?.GetReward(rewardResource)
             }
         }
     }
     
-    func Work(As Cooperation:WorkCooperation, AverageResource:Double) -> WorkCooperationResult{
-        let RequestWorkAction = Cooperation.RequestWorkAction
-        let RequestResult:WorkResult
-        let ResponseResult:WorkResult?
+    func CreturesReproduction() -> [Creature]{
+        var newBornCreatures:[Creature] = []
         
-        if let ResponseWorkAction = Cooperation.ResponseWorkAction {
-            if RequestWorkAction.WorkingAttitude == .helpOther && ResponseWorkAction.WorkingAttitude == .helpOther {
-                RequestResult = .doubleWin
-                ResponseResult = .doubleWin
-            }else if RequestWorkAction.WorkingAttitude == .helpOther && ResponseWorkAction.WorkingAttitude == .selfish {
-                RequestResult = .beenCheated
-                ResponseResult = .exploitation
-            }else if RequestWorkAction.WorkingAttitude == .selfish && ResponseWorkAction.WorkingAttitude == .helpOther {
-                RequestResult = .exploitation
-                ResponseResult = .beenCheated
-            }else if RequestWorkAction.WorkingAttitude == .selfish && ResponseWorkAction.WorkingAttitude == .selfish {
-                RequestResult = .doubleLose
-                ResponseResult = .doubleLose
-            }else {
-                //Work alone
-                RequestResult = .stayAlone
-                ResponseResult = nil
+        creatures.forEach { (creature) in
+            if let newBornCreature = creature.selfReproduction(){
+                newBornCreatures.append(newBornCreature)
             }
-        }else{
-            //Work alone
-            RequestResult = .stayAlone
-            ResponseResult = nil
         }
-        
-        return WorkCooperationResult(HarvestResource:AverageResource, RequestResult: RequestResult, ResponseResult: ResponseResult)
+
+        return newBornCreatures
     }
 
-    
-    public static func WorkReword(of workresult: WorkResult, harvestResource: Double) -> Double{
-        var rewardResource:Double
-        switch workresult {
-        case .doubleWin:
-            rewardResource = harvestResource
-        case .exploitation:
-            rewardResource = harvestResource*1.8
-        case .beenCheated:
-            rewardResource = -harvestResource*0.5
-        case .doubleLose:
-            rewardResource = -harvestResource*0
-        case .stayAlone:
-            rewardResource = harvestResource*0.2
-        }
-        rewardResource -= workingBaseCost
-        return rewardResource
-    }
+//    func Work(As Cooperation:WorkCooperation, AverageResource:Double) -> WorkCooperationResult{
+//        let RequestWorkAction = Cooperation.RequestWorkAction
+//        let RequestResult:WorkResult
+//        let ResponseResult:WorkResult?
+//
+//        if let ResponseWorkAction = Cooperation.ResponseWorkAction {
+//            if RequestWorkAction.WorkingAttitude == .helpOther && ResponseWorkAction.WorkingAttitude == .helpOther {
+//                RequestResult = .doubleWin
+//                ResponseResult = .doubleWin
+//            }else if RequestWorkAction.WorkingAttitude == .helpOther && ResponseWorkAction.WorkingAttitude == .selfish {
+//                RequestResult = .beenCheated
+//                ResponseResult = .exploitation
+//            }else if RequestWorkAction.WorkingAttitude == .selfish && ResponseWorkAction.WorkingAttitude == .helpOther {
+//                RequestResult = .exploitation
+//                ResponseResult = .beenCheated
+//            }else if RequestWorkAction.WorkingAttitude == .selfish && ResponseWorkAction.WorkingAttitude == .selfish {
+//                RequestResult = .doubleLose
+//                ResponseResult = .doubleLose
+//            }else {
+//                //Work alone
+//                RequestResult = .stayAlone
+//                ResponseResult = nil
+//            }
+//        }else{
+//            //Work alone
+//            RequestResult = .stayAlone
+//            ResponseResult = nil
+//        }
+//
+//        return WorkCooperationResult(HarvestResource:AverageResource, RequestResult: RequestResult, ResponseResult: ResponseResult)
+//    }
+//
+//    public static func WorkReword(of workresult: WorkResult, harvestResource: Double) -> Double{
+//        var rewardResource:Double
+//        switch workresult {
+//        case .doubleWin:
+//            rewardResource = harvestResource
+//        case .exploitation:
+//            rewardResource = harvestResource*1.8
+//        case .beenCheated:
+//            rewardResource = -harvestResource*0.5
+//        case .doubleLose:
+//            rewardResource = -harvestResource*0
+//        case .stayAlone:
+//            rewardResource = harvestResource*0.2
+//        }
+//        rewardResource -= pairWorkBaseCost
+//        return rewardResource
+//    }
 }
