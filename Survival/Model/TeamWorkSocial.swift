@@ -6,8 +6,8 @@
 //  Copyright © 2017 GINOFF. All rights reserved.
 //
 
-let teamWorkBaseReword:RewardResource = 20
-let teamWorkBaseCost:WorkingCostResource = 10
+let teamWorkBaseReword:RewardResource = 10
+let teamWorkBaseCost:WorkingCostResource = 5
 
 
 struct CooperationTeam {

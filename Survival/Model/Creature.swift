@@ -12,10 +12,6 @@ protocol ReproductionProtocol {
     func selfReproduction() -> Creature?
 }
 
-protocol WorkProtocol {
-    func findCoWorker(candidate Creatures:inout [Creature]) -> WorkAction?
-    func respondWorkAction(to AnotherCreature: Creature) -> WorkAction
-}
 
 protocol CommunicationProtocol {
     func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude)
@@ -28,25 +24,29 @@ typealias CreatureUniqueID = String
 struct Identifer {
     let familyName:String
     let givenName:String
-    let bornTime:TimeInterval
+    let bornID:Int
     var uniqueID: CreatureUniqueID {
-        return familyName+givenName+"-"+String(Int(bornTime))
+        return familyName+givenName+"-"+String(bornID)
     }
 }
 
-class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
+class Creature : ReproductionProtocol, CommunicationProtocol{
     public var surviveResource:SurvivalResource = 0
     public let identifier:Identifer
     var age:Int = 0
-    let ReproductionAge:Int = 20
-    let ReproductionCost:Double = 20
-    let CreatureReproductionThreshold:Double = 100
+    let reproductionAge:Int = 20
+    let reproductionCost:Double = 30
+    let creatureReproductionThreshold:Double = 100
     public var Story:[String] = []
-    var Memory = CreatureMemory()
-    var Method = Methodology()
+    var memory = CreatureMemory()
+    var method = Methodology()
 
+    static var idCounter = Int(0)
+    
     required init(familyName:String, givenName:String) {
-        identifier = Identifer(familyName: familyName, givenName: givenName, bornTime: Date.timeIntervalSinceReferenceDate)
+        Creature.idCounter += 1
+        identifier = Identifer(familyName: familyName, givenName: givenName, bornID: Creature.idCounter)
+        surviveResource = 20
     }
 
     convenience init(familyName:String, givenName:String, age:Int) {
@@ -54,18 +54,8 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
         self.age = age
     }
 
-    func findCoWorker(candidate Creatures:inout [Creature]) -> WorkAction?{
-        let methodResult = Method.FindCoWorker.findCoWorker(candidate: &Creatures, memory: self.Memory)
-        return WorkAction(Worker: self, WorkingPartner: methodResult.WorkingPartner, WorkingAttitude: methodResult.WorkingAttitude)
-    }
-    
-    func respondWorkAction(to AnotherCreature: Creature) -> WorkAction {
-        let methodResult = Method.ResponseCoWorker.responseCoWorker(to: AnotherCreature, memory: self.Memory)
-        return WorkAction(Worker: self, WorkingPartner: methodResult.WorkingPartner, WorkingAttitude: methodResult.WorkingAttitude)
-    }
-    
     func talk(to creature:Creature, after result:WorkResult){
-        Method.Talk.talk(to: creature, after: result, memory: self.Memory) { (creature, creatureID, behaviour) in
+        method.Talk.talk(to: creature, after: result, memory: self.memory) { (creature, creatureID, behaviour) in
             self.tell(creature, About: creatureID, WorkBehavior: behaviour)
         }
     }
@@ -76,55 +66,10 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
     }
 
     func listen(from creature:Creature, About anotherCreatureID:String, WorkBehavior behavior:WorkAttitude){
-        Method.Listen.listen(from: creature, about: anotherCreatureID, behavior: behavior, memory: self.Memory) { (creature, creatureID, behaviour, story) in
+        method.Listen.listen(from: creature, about: anotherCreatureID, behavior: behavior, memory: self.memory) { (creature, creatureID, behaviour, story) in
             self.writeStory(story)
         }
     }
-
-//    func requestWorkResult(of Cooperation:WorkCooperation, CooperationResult:WorkCooperationResult){
-//        let RequestWorkAction = Cooperation.RequestWorkAction
-//        let RequestResult = CooperationResult.RequestResult
-//        if let ResponseWorkAction = Cooperation.ResponseWorkAction,
-//            let AnotherCreature = RequestWorkAction.WorkingPartner {
-//            self.Memory.remember(ResponseWorkAction)
-//
-//            let WorkReword = SocialBehavior.WorkReword(of:RequestResult, harvestResource: CooperationResult.HarvestResource)
-//            surviveResource += WorkReword
-//            var story = "Request work with "+AnotherCreature.identifier.uniqueID+","
-//            story += " "+RequestWorkAction.WorkingAttitude.rawValue+" VS "+ResponseWorkAction.WorkingAttitude.rawValue
-//            story += ", result:"+RequestResult.rawValue
-//            story += " reward:"+String(WorkReword)
-//            story += " resource:"+String(surviveResource)
-//            writeStory(story)
-//        }else{
-//            let WorkReword = SocialBehavior.WorkReword(of:RequestResult, harvestResource: CooperationResult.HarvestResource)
-//            surviveResource += WorkReword
-//            var story = "Stay alone"
-//            story += " reward:"+String(WorkReword)
-//            story += " resource:"+String(surviveResource)
-//            writeStory(story)
-//        }
-//    }
-    
-//    func responseWorkResult(of Cooperation:WorkCooperation, CooperationResult:WorkCooperationResult){
-//        guard let ResponseWorkAction = Cooperation.ResponseWorkAction,
-//            let ResponseResult = CooperationResult.ResponseResult,
-//            let AnotherCreature = ResponseWorkAction.WorkingPartner else {
-//            return
-//        }
-//        let RequestWorkAction = Cooperation.RequestWorkAction
-//
-//        self.Memory.remember(RequestWorkAction)
-//
-//        let WorkReword = SocialBehavior.WorkReword(of:ResponseResult, harvestResource: CooperationResult.HarvestResource)
-//        surviveResource += WorkReword
-//        var story = "Response work with "+AnotherCreature.identifier.uniqueID+","
-//        story += " "+ResponseWorkAction.WorkingAttitude.rawValue+" VS "+RequestWorkAction.WorkingAttitude.rawValue
-//        story += ", result:"+ResponseResult.rawValue
-//        story += " reward:"+String(WorkReword)
-//        story += " resource:"+String(surviveResource)
-//        writeStory(story)
-//    }
 
     func writeStory(_ NewStory:String) {
         Story.append("Age:"+String(age)+":"+NewStory)
@@ -135,14 +80,14 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
     }
     
     func selfReproduction() -> Creature?{
-        if age >= ReproductionAge , surviveResource >= CreatureReproductionThreshold{
-            surviveResource -= ReproductionCost
+        if age >= reproductionAge , surviveResource >= creatureReproductionThreshold{
+            surviveResource -= reproductionCost
             writeStory("Born a new herit")
             
             let newBorn = type(of: self).init(familyName: identifier.familyName, givenName:identifier.givenName+"#")
             
-            newBorn.Memory = self.Memory.memoryInherit()
-            newBorn.writeStory("Inherit memory from parent:"+newBorn.Memory.workActionImpressionMemory.description)
+            newBorn.memory.learnFromExperience(self.memory.teachExperience())
+            newBorn.writeStory("Inherit memory from parent:"+newBorn.memory.description())
             return newBorn
         }
         return nil
@@ -162,7 +107,7 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
     }
     
     func TeamPropose(from creatures:[Creature]) -> TeamWorkCooperation? {
-        let TeamProposal = Method.TeamUp.TeamPropose(from: self, on: creatures)
+        let TeamProposal = method.TeamUp.TeamPropose(from: self, on: creatures)
         if nil != TeamProposal {
             writeStory("Try leading a team")
         }
@@ -170,12 +115,12 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
     }
     
     func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        return Method.TeamUp.AcceptInvite(from: self, to: teams)
+        return method.TeamUp.AcceptInvite(from: self, to: teams)
     }
     
     func AssignReward(to coopertion:inout TeamWorkCooperation) {
         writeStory("Assign rewards to members")
-        return Method.TeamUp.AssignReward(to: &coopertion)
+        return method.TeamUp.AssignReward(to: &coopertion)
     }
 
     func WorkCost(_ workingCost:WorkingCostResource) {
@@ -183,10 +128,55 @@ class Creature : ReproductionProtocol, WorkProtocol, CommunicationProtocol{
         self.surviveResource -= workingCost
     }
 
-    func GetReward(_ rewardResource:RewardResource) {
-        writeStory("Get reward from team:"+String(rewardResource))
+    func GetReward(_ rewardResource:RewardResource, as cooperation:TeamWorkCooperation) {
+        writeStory("Get reward from team:"+String(rewardResource)+", leader:"+cooperation.Team.TeamLeaderID)
         self.surviveResource += rewardResource
+        self.memory.remember(teamWorkCooperation: cooperation)
+    }
+}
+
+class FairLeader : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamUp: TeamUpMethodology_LeaderShip())
+    }
+}
+
+class SelfishLeader : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamUp: TeamUpMethodology_SelfishLeader())
+    }
+}
+
+class Follower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamUp: TeamUpMethodology_Follower())
     }
 }
 
 
+class ConservativeFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamUp: TeamUpMethodology_ConservativeFollower())
+    }
+}
+
+class EliteFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamUp: TeamUpMethodology_EliteFollower())
+    }
+}

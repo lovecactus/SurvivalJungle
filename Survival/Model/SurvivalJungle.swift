@@ -32,12 +32,15 @@ class SurvivalJungle {
     
     func initialCreatureGroup() {
         for index in 1...creatureNumber {
-            allCreatures.append(Creature(familyName: "Test", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(FairLeader(familyName: "Fair Leader", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(SelfishLeader(familyName: "SelfishLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(EliteFollower(familyName: "EliteFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(ConservativeFollower(familyName: "ConservativeFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
         }
-
+        allCreatures.shuffle()
     }
     
-    func CreturesSurvival() -> [Creature]{
+    func CreaturesSurvival() -> [Creature]{
         var FailedCreature:[Creature] = []
         allCreatures = allCreatures.filter({ (ChallengingCreature:Creature) -> Bool in
             if ChallengingCreature.surviveChallenge() {
@@ -50,109 +53,32 @@ class SurvivalJungle {
         return FailedCreature
     }
 
-    func CreturesAging() {
+    func CreaturesAging() {
         allCreatures.forEach { (Creature) in
             Creature.aging()
         }
     }
-
-//    func SurviveStart() -> [SurvivalStatistic]{
-//        //Check if a creature is about to die or reproduction
-//        for season in 1...seasonNumber{
-//            var SeasonStatistic = SurvivalStatistic()
-//            self.Working(&SeasonStatistic)
-//            self.CreturesReproduction(&SeasonStatistic)
-//            self.CreturesSurvival()
-//            self.CreturesAging()
-//            self.SurviveCreaturesStatistic(season,SeasonStatistic:&SeasonStatistic)
-//            statistic.append(SeasonStatistic)
-//        }
-//        return statistic
-//    }
-//
-//    func SurviveCreaturesStatistic(_ season:Int, SeasonStatistic:inout SurvivalStatistic){
-//        let creatureResources:[Double] = allCreatures.map { (Creature) -> Double in
-//            return Creature.surviveResource
-//        }
-//
-//        let survivedNiceCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is NiceCreature
-//        }
-//
-//        let survivedConservativeCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is ConservativeCreature
-//        }
-//
-//        let survivedOpenBadCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is OpenBadCreature
-//        }
-//
-//        let survivedStrategyBadCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is StrategyBadCreature
-//        }
-//
-//        let survivedConservativeBadCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is ConservativeBadCreature
-//        }
-//
-//        let survivedMeanCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is MeanCreature
-//        }
-//
-//        let survivedSelfishMeanCreature = allCreatures.filter { (Creature) -> Bool in
-//            return Creature is SelfishMeanCreature
-//        }
-//
-//        SeasonStatistic.Total = allCreatures.count
-//        SeasonStatistic.Died = diedCreatures.count
-//        SeasonStatistic.Nice = survivedNiceCreature.count
-//        SeasonStatistic.Conservative = survivedConservativeCreature.count
-//        SeasonStatistic.OpenBad = survivedOpenBadCreature.count
-//        SeasonStatistic.ConservativeBad = survivedConservativeBadCreature.count
-//        SeasonStatistic.StrategyBad = survivedStrategyBadCreature.count
-//        SeasonStatistic.Mean = survivedMeanCreature.count
-//        SeasonStatistic.SelfishMean = survivedSelfishMeanCreature.count
-//
-//        print ("round:",season,
-//               "\t cooperate:",SeasonStatistic.Cooperate,
-//               "\t cheat:",SeasonStatistic.Cheat,
-//               "\t failure:",SeasonStatistic.Failure,
-//               "\t NewBorn:",SeasonStatistic.NewBorn,
-//               "\t died:",SeasonStatistic.Died);
-//
-//        print ("All creatures:",SeasonStatistic.Total,
-//               "History died creatures:",SeasonStatistic.Died,
-//               "\t NiceCreature:",SeasonStatistic.Nice,
-//               "\t ConservativeCreature:",SeasonStatistic.Conservative,
-//               "\t OpenBadCreature:",SeasonStatistic.OpenBad,
-//               "\t ConservativeBadCreature:",SeasonStatistic.ConservativeBad,
-//               "\t StrategyBadCreature:",SeasonStatistic.StrategyBad,
-//               "\t MeanCreature:",SeasonStatistic.Mean,
-//               "\t SelfishMeanCreature:",SeasonStatistic.SelfishMean
-//               )
-//
-//        print ("group resource:", creatureResources.reduce(0, +), "average resource:",creatureResources.average)
-//    }
     
     func SandboxStart() -> [SurvivalStatistic]{
-        for _ in 1...seasonNumber{
+        for season in 1...seasonNumber{
             var seasonResource = jungleTotalResource
             let social = SocialBehavior(with: allCreatures, seasonResource:&seasonResource)
             social.TeamWork()
 
-            let newBornCreatures = social.CreturesReproduction()
-            social.statistic["NewBorn"] = Double(newBornCreatures.count)
+            let newBornCreatures = social.CreaturesReproduction()
             allCreatures.append(contentsOf: newBornCreatures)
 
-            let seasonDiedCreature = self.CreturesSurvival()
+            let seasonDiedCreature = self.CreaturesSurvival()
             diedCreatures.append(contentsOf: seasonDiedCreature)
-            social.statistic["Died"] = Double(diedCreatures.count)
             
-            self.CreturesAging()
-            social.statistic.countTotalResource(in: &allCreatures)
-            social.statistic["total creature"] = Double(allCreatures.count)
-            social.statistic["died creature"] = Double(diedCreatures.count)
+            self.CreaturesAging()
+//            social.statistic.countResource(in: allCreatures)
+            social.statistic["FairLeader"] = Double(allCreatures.findAllCeatures(Of: "FairLeader").count)
+            social.statistic["SelfishLeader"] = Double(allCreatures.findAllCeatures(Of: "SelfishLeader").count)
+            social.statistic["EliteFollower"] = Double(allCreatures.findAllCeatures(Of: "EliteFollower").count)
+            social.statistic["ConservativeFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeFollower").count)
             statistic.append(social.statistic)
+            print("season-\(season):\(social.statistic)")
         }
         return statistic
     }

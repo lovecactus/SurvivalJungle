@@ -22,10 +22,10 @@ extension Dictionary where Key == String, Value == Double {
         return defaultValue
     }
     
-    mutating func countTotalResource(in creatures:inout [Creature]) {
+    mutating func countResource(in creatures:[Creature]) {
         let totalResource:Value = creatures.reduce(0) { (result, creature) -> Value in
             return result+creature.surviveResource
         }
-        self["totalResource"] = totalResource
+        self["average resource"] = totalResource/Double(creatures.count)
     }
 }

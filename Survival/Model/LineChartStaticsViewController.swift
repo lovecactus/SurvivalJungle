@@ -61,7 +61,7 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         ChartView.backgroundColor = .white
         
         let leftAxis = ChartView.leftAxis
-        leftAxis.axisMaximum = 400.0
+        leftAxis.axisMaximum = 800.0
         leftAxis.axisMinimum = 0.0
         leftAxis.gridLineDashLengths = [5.0, 5.0]
         leftAxis.drawZeroLineEnabled = false;
@@ -103,7 +103,7 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
                 color = .blue
                 break
             case 2:
-                color = .yellow
+                color = .cyan
                 break
             case 3:
                 color = .green
