@@ -73,7 +73,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
     }
 
     func writeStory(_ NewStory:String) {
-        Story.append("Age:"+String(age)+":"+NewStory)
+        Story.append("Age:"+String(age)+"-Resource:"+String(surviveResource)+":"+NewStory)
     }
     
     func aging(){
@@ -117,7 +117,12 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
     }
     
     func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        return method.TeamFollow.AcceptInvite(from: self, to: teams)
+        guard let team = method.TeamFollow.AcceptInvite(from: self, to: teams) else {
+            writeStory("Failed to accept all invitations... How did this happen?")
+            return nil
+        }
+        writeStory("Accept invite from leader:"+team.Team.TeamLeaderID)
+        return team
     }
 
     func WorkEffort(to team:TeamWorkCooperation) -> TeamCooperationEffort{
@@ -126,7 +131,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
 
     func WasteTime(){
         surviveResource -= wasteTimeResource
-        writeStory("Nothing to do, waste time wandering.")
+        writeStory("Nothing to do, waste time wandering, cost:"+String(wasteTimeResource))
     }
 
     func AssignReward(to coopertion:inout TeamWorkCooperation) {
@@ -183,7 +188,7 @@ class SelfishLeader : Creature {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamLead: TeamLeadMethodology_SelfishLeader(),
+                                  TeamLead: TeamLeadMethodology_SelfishLeaderShip(),
                                   TeamFollow: TeamFollowMethodology())
     }
 }
@@ -205,6 +210,16 @@ class BetterSelfishLeader : Creature {
                                   Listen: ListenMethodology(),
                                   TeamLead: TeamLeadMethodology_BetterSelfishLeaderShip(),
                                   TeamFollow: TeamFollowMethodology())
+    }
+}
+
+class BetterSelfishAdapter : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology_BetterSelfishLeaderShip_Adapter(),
+                                  TeamFollow: TeamFollowMethodology_ConservativeRewardFollower())
     }
 }
 

@@ -39,7 +39,7 @@ class SocialBehavior {
         }
         
 //        statistic["Succeed Team"] = Double(cooperations.filter({ $0.Goal.Succeed}).count)
-//        statistic["Team Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
+        statistic["Team Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
         statistic["Single Wanderer"] = Double(failedCreatures.SingleCreatures.count)
     }
 

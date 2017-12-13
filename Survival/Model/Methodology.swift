@@ -9,7 +9,7 @@
 import Foundation
 
 
-let maxLeadingMembers = 10
+let maxLeadingMembers = 20
 let teamWorkConservativeReword:RewardResource = 4
 let teamWorkIdealReword:RewardResource = 8
 
@@ -207,36 +207,72 @@ class TeamLeadMethodology_BetterSelfishLeaderShip:TeamLeadMethodology_LeaderShip
         }
         
         var totalRewards = Reward.TotalRewards
-        let otherReward = totalRewards*2/3
-        let restAverageReward = otherReward/Double(coopertion.Team.OtherMemberIDs.count)
+        let leaderReward = totalRewards/3 //Take 1/3 first before assignment
+        totalRewards -= leaderReward
+
+        let restAverageReward = totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
         for memberID in coopertion.Team.OtherMemberIDs {
             Reward.MemberRewards[memberID] = restAverageReward
             totalRewards -= restAverageReward
         }
-        
         let restReward = totalRewards
-        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward+leaderReward
+        
         coopertion.Reward = Reward
     }
 }
 
+class TeamLeadMethodology_BetterSelfishLeaderShip_Adapter:TeamLeadMethodology_BetterSelfishLeaderShip{
+    override func TeamPropose(from creature:Creature,
+                              on creatures:[Creature]) -> TeamWorkCooperation? {
+        if (creature.surviveResource > 0){
+            return super.TeamPropose(from: creature, on: creatures)
+        }
+        creature.memory.shortMemory.isAssamblingTeam = false
+        return nil
+    }
+}
 
-class TeamLeadMethodology_SelfishLeader:TeamLeadMethodology_LeaderShip{
+class TeamLeadMethodology_SelfishLeaderShip_Adapter:TeamLeadMethodology_SelfishLeaderShip{
+    override func TeamPropose(from creature:Creature,
+                              on creatures:[Creature]) -> TeamWorkCooperation? {
+        if (creature.surviveResource > 0){
+            return super.TeamPropose(from: creature, on: creatures)
+        }
+        creature.memory.shortMemory.isAssamblingTeam = false
+        return nil
+    }
+}
+
+class TeamLeadMethodology_FairLeaderShip_Adapter:TeamLeadMethodology_FairLeaderShip{
+    override func TeamPropose(from creature:Creature,
+                              on creatures:[Creature]) -> TeamWorkCooperation? {
+        if (creature.surviveResource > 0){
+            return super.TeamPropose(from: creature, on: creatures)
+        }
+        creature.memory.shortMemory.isAssamblingTeam = false
+        return nil
+    }
+}
+
+class TeamLeadMethodology_SelfishLeaderShip:TeamLeadMethodology_LeaderShip{
     override func AssignReward(to coopertion:inout TeamWorkCooperation) {
         guard var Reward = coopertion.Reward else{
             return
         }
 
         var totalRewards = Reward.TotalRewards
-        let otherReward = totalRewards/2
-        let restAverageReward = otherReward/Double(coopertion.Team.OtherMemberIDs.count)
+        let leaderReward = totalRewards/2 //Take 1/2 first before assignment
+        totalRewards -= leaderReward
+        
+        let restAverageReward = totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
         for memberID in coopertion.Team.OtherMemberIDs {
             Reward.MemberRewards[memberID] = restAverageReward
             totalRewards -= restAverageReward
         }
-
         let restReward = totalRewards
-        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward+leaderReward
+
         coopertion.Reward = Reward
     }
 }
@@ -332,28 +368,25 @@ class TeamFollowMethodology_FairFollower:TeamFollowMethodology{
                 return (leaderID,0)
             }
             
-            let fair = memorySlices.map({ (cooperation) -> Bool in
-                guard let reward = cooperation.Reward else {
-                    return false
+            let fair = memorySlices.map({ (cooperation) -> Int in
+                guard let randomOtherMemberID = cooperation.Team.OtherMemberIDs.randomPick(),
+                    let reward = cooperation.Reward,
+                    let otherReward = reward.MemberRewards[randomOtherMemberID],
+                    let leaderReward = reward.MemberRewards[leaderID] else {
+                    return 0
                 }
-                
-                guard let randomOtherMemberID = cooperation.Team.OtherMemberIDs.randomPick() else {
-                    return false
+
+                if 0 == otherReward && 0 == leaderReward {
+                    return 0
                 }
-                
-                guard let otherReward = reward.MemberRewards[randomOtherMemberID] else {
-                    return false
+                if otherReward >= leaderReward {
+                    return 1
                 }
-                
-                guard let leaderReward = reward.MemberRewards[leaderID] else {
-                    return false
-                }
-                
-                return (otherReward >= leaderReward)
+                return -1
             })
             
             let score = fair.reduce(0, { (result, fair) -> Int in
-                return result + (fair ? 1 : 0)
+                return result + fair
             })
             return (leaderID,score)
             }.sorted  { $0.1 > $1.1 }
