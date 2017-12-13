@@ -8,8 +8,8 @@
 
 import Foundation
 
-let DieForAge:Int = 100
-let CreatureSurviveScore:Double = -100
+let DieForAge:Int = 200
+let CreatureSurviveScore:Double = -200
 
 class Challenge {
 }

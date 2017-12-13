@@ -114,6 +114,18 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
             case 5:
                 color = .orange
                 break
+            case 6:
+                color = .purple
+                break
+            case 7:
+                color = .darkGray
+                break
+            case 8:
+                color = .gray
+                break
+            case 9:
+                color = .magenta
+                break
             default:
                 color = .black
             }

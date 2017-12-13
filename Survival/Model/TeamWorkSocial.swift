@@ -6,9 +6,15 @@
 //  Copyright © 2017 GINOFF. All rights reserved.
 //
 
-let teamWorkBaseReword:RewardResource = 10
+typealias WorkingEffort = Double
+
+
+let teamStartUpCost:RewardResource = 5
+let teamBounsReward:RewardResource = teamStartUpCost*2
+let teamWorkBaseReword:RewardResource = 5
 let teamWorkBaseCost:WorkingCostResource = 5
 
+let wasteTimeResource:SurvivalResource = teamWorkBaseReword
 
 struct CooperationTeam {
     var TeamLeaderID:CreatureUniqueID
@@ -19,7 +25,40 @@ struct CooperationTeam {
 }
 
 struct CooperationAction {
-    var memberActions:[CreatureUniqueID:TeamCooperationEffort]
+    var MemberActions:[CreatureUniqueID:TeamCooperationEffort]
+    
+    func TotalEffort() -> WorkingEffort{
+        let teamWorkingEffort = self.MemberActions.enumerated().reduce(0, { (result, action) -> WorkingEffort in
+            let workingEffort:WorkingEffort
+            switch action.element.value {
+            case .AllIn:
+                workingEffort = 5
+                break
+            case .Responsive:
+                workingEffort = 3
+                break
+            case .Lazy:
+                workingEffort = 1
+                break
+            }
+            return result+workingEffort
+        })
+        return teamWorkingEffort
+    }
+    
+    func WorkMemberCount() -> Int{
+        let workMemberCount = self.MemberActions.enumerated().reduce(0, { (result, action) -> Int in
+            switch action.element.value {
+            case .AllIn:
+                return result + 1
+            case .Responsive:
+                return result + 1
+            case .Lazy:
+                return result
+            }
+        })
+        return workMemberCount
+    }
 }
 
 struct CooperationGoal {
@@ -27,21 +66,20 @@ struct CooperationGoal {
 }
 
 enum TeamCooperationEffort {
-    case Corruption
     case Lazy
     case Responsive
     case AllIn
 }
 
 struct CooperationReward {
-    var totalRewards:RewardResource
-    var memberRewards:[CreatureUniqueID:RewardResource]
+    var TotalRewards:RewardResource
+    var MemberRewards:[CreatureUniqueID:RewardResource]
 }
 
 struct TeamWorkCooperation{
     init(Team:CooperationTeam, TeamProposal:CooperationTeam) {
         Goal = CooperationGoal(Succeed: false)
-        Action = nil
+        Action = CooperationAction(MemberActions: [:])
         Reward = nil
         self.Team = Team
         self.TeamProposal = TeamProposal
@@ -49,7 +87,10 @@ struct TeamWorkCooperation{
     var Goal:CooperationGoal
     var Team:CooperationTeam
     var TeamProposal:CooperationTeam
-    var Action:CooperationAction?
+    var Action:CooperationAction
     var Reward:CooperationReward?
 }
 
+struct FailedTeamUp{
+    var SingleCreatures:[CreatureUniqueID]
+}

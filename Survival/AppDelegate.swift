@@ -14,17 +14,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-        let jungle = SurvivalJungle(totalResource: 1500.0, totalSeasonNumber: 500, averageCreatureNumber: 20)
-        let survivalStatic = jungle.SandboxStart()        
-//        let survivalStatic = jungle.SurviveStart()
-        let statisticsVC = LineChartStaticsViewController(Statistic: survivalStatic)
-        self.window?.rootViewController = statisticsVC
-        Delay(3) {
-            print("Survived:"+String(jungle.allCreatures.count))
-            print("Died:"+String(jungle.diedCreatures.count))
-            print("Check statics")
-        }
         return true
     }
 
@@ -44,6 +33,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Override point for customization after application launch.
+        let jungle = SurvivalJungle(totalResource: 1500.0, averageCreatureNumber: 20)
+        for _ in 1...INT_MAX {
+            let survivalStatic = jungle.Run(20)
+            let statisticsVC = LineChartStaticsViewController(Statistic: survivalStatic)
+            self.window?.rootViewController = statisticsVC
+            Wait(3, closure: {
+                //dummy
+            })
+            print("Survived:"+String(jungle.allCreatures.count))
+            print("Died:"+String(jungle.diedCreatures.count))
+            print("Check statics")
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

@@ -34,9 +34,10 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
     public var surviveResource:SurvivalResource = 0
     public let identifier:Identifer
     var age:Int = 0
-    let reproductionAge:Int = 20
-    let reproductionCost:Double = 30
-    let creatureReproductionThreshold:Double = 100
+    let reproductionAge:Int = 40
+    let reproductionCost:Double = 60
+    let newBornResource:Double = 40
+    let creatureReproductionThreshold:Double = 200
     public var Story:[String] = []
     var memory = CreatureMemory()
     var method = Methodology()
@@ -46,7 +47,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
     required init(familyName:String, givenName:String) {
         Creature.idCounter += 1
         identifier = Identifer(familyName: familyName, givenName: givenName, bornID: Creature.idCounter)
-        surviveResource = 20
+        surviveResource = newBornResource
     }
 
     convenience init(familyName:String, givenName:String, age:Int) {
@@ -107,24 +108,46 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
     }
     
     func TeamPropose(from creatures:[Creature]) -> TeamWorkCooperation? {
-        let TeamProposal = method.TeamUp.TeamPropose(from: self, on: creatures)
+        let TeamProposal = method.TeamLead.TeamPropose(from: self, on: creatures)
         if nil != TeamProposal {
-            writeStory("Try leading a team")
+            writeStory("Try leading a team, with cost:"+String(teamStartUpCost))
+            surviveResource -= teamStartUpCost
         }
         return TeamProposal
     }
     
     func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        return method.TeamUp.AcceptInvite(from: self, to: teams)
-    }
-    
-    func AssignReward(to coopertion:inout TeamWorkCooperation) {
-        writeStory("Assign rewards to members")
-        return method.TeamUp.AssignReward(to: &coopertion)
+        return method.TeamFollow.AcceptInvite(from: self, to: teams)
     }
 
-    func WorkCost(_ workingCost:WorkingCostResource) {
-        writeStory("Working cost:"+String(workingCost))
+    func WorkEffort(to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return method.TeamFollow.WorkingEffort(from: self, to: team)
+    }
+
+    func WasteTime(){
+        surviveResource -= wasteTimeResource
+        writeStory("Nothing to do, waste time wandering.")
+    }
+
+    func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        writeStory("Assign rewards to members")
+        return method.TeamLead.AssignReward(to: &coopertion)
+    }
+
+    func WorkCost(_ effort:TeamCooperationEffort) {
+        let workingCost:SurvivalResource
+        switch effort {
+        case .AllIn:
+            workingCost = 5
+            break
+        case .Responsive:
+            workingCost = 3
+            break
+        case .Lazy:
+            workingCost = 1
+            break
+        }
+        writeStory("Working cost:"+String(workingCost)+" with attitude:"+String(describing: effort))
         self.surviveResource -= workingCost
     }
 
@@ -140,7 +163,18 @@ class FairLeader : Creature {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamUp: TeamUpMethodology_LeaderShip())
+                                  TeamLead: TeamLeadMethodology_FairLeaderShip(),
+                                  TeamFollow: TeamFollowMethodology())
+    }
+}
+
+class FairNoLazyLeader : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology_FairLeaderShip_NoLazy(),
+                                  TeamFollow: TeamFollowMethodology())
     }
 }
 
@@ -149,7 +183,28 @@ class SelfishLeader : Creature {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamUp: TeamUpMethodology_SelfishLeader())
+                                  TeamLead: TeamLeadMethodology_SelfishLeader(),
+                                  TeamFollow: TeamFollowMethodology())
+    }
+}
+
+class SelfishNoLazyLeader : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology_SelfishLeader_NoLazy(),
+                                  TeamFollow: TeamFollowMethodology())
+    }
+}
+
+class BetterSelfishLeader : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology_BetterSelfishLeaderShip(),
+                                  TeamFollow: TeamFollowMethodology())
     }
 }
 
@@ -158,25 +213,68 @@ class Follower : Creature {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamUp: TeamUpMethodology_Follower())
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology())
     }
 }
 
 
-class ConservativeFollower : Creature {
+class ConservativeRewardFollower : Creature {
     required init(familyName:String, givenName:String) {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamUp: TeamUpMethodology_ConservativeFollower())
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_ConservativeRewardFollower())
     }
 }
 
-class EliteFollower : Creature {
+class SelfishRewardFollower : Creature {
     required init(familyName:String, givenName:String) {
         super.init(familyName: familyName, givenName: givenName)
         self.method = Methodology(Talk: TalkMethodology(),
                                   Listen: ListenMethodology(),
-                                  TeamUp: TeamUpMethodology_EliteFollower())
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_SelfishRewardFollower())
+    }
+}
+
+class FairFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_FairFollower())
+    }
+}
+
+class ConservativeRewardLazyFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_ConservativeRewardFollower_Lazy())
+    }
+}
+
+class SelfishRewardLazyFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_SelfishRewardFollower_Lazy())
+    }
+}
+
+class FairLazyFollower : Creature {
+    required init(familyName:String, givenName:String) {
+        super.init(familyName: familyName, givenName: givenName)
+        self.method = Methodology(Talk: TalkMethodology(),
+                                  Listen: ListenMethodology(),
+                                  TeamLead: TeamLeadMethodology(),
+                                  TeamFollow: TeamFollowMethodology_FairFollower_Lazy())
     }
 }

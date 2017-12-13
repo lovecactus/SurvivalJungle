@@ -8,6 +8,11 @@
 
 import Foundation
 
+
+let maxLeadingMembers = 10
+let teamWorkConservativeReword:RewardResource = 4
+let teamWorkIdealReword:RewardResource = 8
+
 enum CoWorkerChooseDecision: UInt32 {
     case ChooseNewFriend
     case ChooseOldFriend
@@ -33,7 +38,8 @@ enum CoWorkerChooseDecision: UInt32 {
 struct Methodology {
     var Talk:TalkMethodology = TalkMethodology()
     var Listen:ListenMethodology = ListenMethodology()
-    var TeamUp:TeamUpMethodology = TeamUpMethodology()
+    var TeamLead:TeamLeadMethodology = TeamLeadMethodology()
+    var TeamFollow:TeamFollowMethodology = TeamFollowMethodology()
 }
 
 class TalkMethodology{
@@ -56,14 +62,8 @@ class ListenMethodology{
     }
 }
 
-let maxLeadingMembers = 10
-
-class TeamUpMethodology{
+class TeamLeadMethodology{
     func TeamPropose(from creature:Creature, on creatures:[Creature]) -> TeamWorkCooperation? {
-        return nil
-    }
-    
-    func AcceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
         return nil
     }
     
@@ -72,53 +72,29 @@ class TeamUpMethodology{
     }
 }
 
-
-class TeamUpMethodology_Random:TeamUpMethodology{
-    private func randomOfRate(_ rate:Int) -> Bool {
-        return (arc4random_uniform(100) > rate)
-    }
-    
-    override func TeamPropose(from creature:Creature, on creatures:[Creature]) -> TeamWorkCooperation? {
-        if randomOfRate(70) {
-            var teamMembers:[CreatureUniqueID] = []
-            if let otherMemberCandidates = creatures.randomPick(some: maxLeadingMembers) {
-                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
-                    return creature.identifier.uniqueID
-                }))
-            }
-            let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
-            let currentTeam = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: [])
-            creature.memory.shortMemory.isAssamblingTeam = true
-            return TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
-            
-        }else{
-            creature.memory.shortMemory.isAssamblingTeam = false
-            return nil
-        }
-    }
-    
-    override func AcceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+class TeamFollowMethodology {
+    func AcceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
         if creature.memory.shortMemory.isAssamblingTeam {
             return nil
         }
+        
         return teams.randomPick()
     }
     
-    override func AssignReward(to coopertion:inout TeamWorkCooperation) {
-        guard var Reward = coopertion.Reward else{
-            return
-        }
-        
-        let averageSplitReward = Reward.totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
-        for memberID in coopertion.Team.OtherMemberIDs {
-            Reward.memberRewards[memberID] = averageSplitReward
-        }
-        Reward.memberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
-        coopertion.Reward = Reward
+    func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .AllIn
     }
+
 }
 
-class TeamUpMethodology_LeaderShip:TeamUpMethodology{
+class TeamFollowMethodologyLazy:TeamFollowMethodology{
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .Lazy
+    }
+    
+}
+
+class TeamLeadMethodology_LeaderShip:TeamLeadMethodology{
     override func TeamPropose(from creature:Creature,
                               on creatures:[Creature]) -> TeamWorkCooperation? {
         var teamMembers:[CreatureUniqueID] = []
@@ -143,7 +119,9 @@ class TeamUpMethodology_LeaderShip:TeamUpMethodology{
         let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
         let currentTeam = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: [])
         creature.memory.shortMemory.isAssamblingTeam = true
-        return TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
+        var cooperation = TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
+        cooperation.Action.MemberActions[creature.identifier.uniqueID] = .AllIn
+        return cooperation
     }
 
     override func AssignReward(to coopertion:inout TeamWorkCooperation) {
@@ -151,56 +129,152 @@ class TeamUpMethodology_LeaderShip:TeamUpMethodology{
             return
         }
         
-        let averageSplitReward = Reward.totalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
+        let averageSplitReward = Reward.TotalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
         for memberID in coopertion.Team.OtherMemberIDs {
-            Reward.memberRewards[memberID] = averageSplitReward
+            Reward.MemberRewards[memberID] = averageSplitReward
         }
-        Reward.memberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        coopertion.Reward = Reward
+    }
+}
+
+class TeamLeadMethodology_LeaderShip_NoLazy:TeamLeadMethodology_LeaderShip{
+    override func TeamPropose(from creature:Creature,
+                              on creatures:[Creature]) -> TeamWorkCooperation? {
+        var teamMembers:[CreatureUniqueID] = []
+        if let lastMemory = creature.memory.thinkOfLastTeamWorkMemory() {
+            let otherOldMemberIDs = lastMemory.teamWorkCooperation.Team.OtherMemberIDs.filter({ (memberID) -> Bool in
+                guard let memberEffort = lastMemory.teamWorkCooperation.Action.MemberActions[memberID] else {
+                    return false
+                }
+                return memberEffort != .Lazy
+            })
+            teamMembers.append(contentsOf: otherOldMemberIDs)
+        }
+        
+        if teamMembers.count < maxLeadingMembers{
+            if let otherMemberCandidates = creatures.randomPick(some: maxLeadingMembers-teamMembers.count) {
+                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
+                    return creature.identifier.uniqueID
+                }))
+            }
+        }
+        
+        let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
+        let currentTeam = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: [])
+        creature.memory.shortMemory.isAssamblingTeam = true
+        var cooperation = TeamWorkCooperation(Team: currentTeam, TeamProposal: teamProposal)
+        cooperation.Action.MemberActions[creature.identifier.uniqueID] = .AllIn
+        return cooperation
+    }
+    
+}
+
+class TeamLeadMethodology_FairLeaderShip:TeamLeadMethodology_LeaderShip{
+    override func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        let averageSplitReward = Reward.TotalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.MemberRewards[memberID] = averageSplitReward
+        }
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        coopertion.Reward = Reward
+    }
+}
+
+class TeamLeadMethodology_FairLeaderShip_NoLazy:TeamLeadMethodology_LeaderShip_NoLazy{
+    override func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        let averageSplitReward = Reward.TotalRewards/Double(coopertion.Team.OtherMemberIDs.count+1)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.MemberRewards[memberID] = averageSplitReward
+        }
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = averageSplitReward
+        coopertion.Reward = Reward
+    }
+}
+
+class TeamLeadMethodology_BetterSelfishLeaderShip:TeamLeadMethodology_LeaderShip{
+    override func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        var totalRewards = Reward.TotalRewards
+        let otherReward = totalRewards*2/3
+        let restAverageReward = otherReward/Double(coopertion.Team.OtherMemberIDs.count)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.MemberRewards[memberID] = restAverageReward
+            totalRewards -= restAverageReward
+        }
+        
+        let restReward = totalRewards
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward
         coopertion.Reward = Reward
     }
 }
 
 
-class TeamUpMethodology_SelfishLeader:TeamUpMethodology_LeaderShip{
+class TeamLeadMethodology_SelfishLeader:TeamLeadMethodology_LeaderShip{
     override func AssignReward(to coopertion:inout TeamWorkCooperation) {
         guard var Reward = coopertion.Reward else{
             return
         }
 
-        var totalRewards = Reward.totalRewards
+        var totalRewards = Reward.TotalRewards
         let otherReward = totalRewards/2
         let restAverageReward = otherReward/Double(coopertion.Team.OtherMemberIDs.count)
         for memberID in coopertion.Team.OtherMemberIDs {
-            Reward.memberRewards[memberID] = restAverageReward
+            Reward.MemberRewards[memberID] = restAverageReward
             totalRewards -= restAverageReward
         }
 
         let restReward = totalRewards
-        Reward.memberRewards[coopertion.Team.TeamLeaderID] = restReward
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward
+        coopertion.Reward = Reward
+    }
+}
+
+class TeamLeadMethodology_SelfishLeader_NoLazy:TeamLeadMethodology_LeaderShip_NoLazy{
+    override func AssignReward(to coopertion:inout TeamWorkCooperation) {
+        guard var Reward = coopertion.Reward else{
+            return
+        }
+        
+        var totalRewards = Reward.TotalRewards
+        let otherReward = totalRewards/2
+        let restAverageReward = otherReward/Double(coopertion.Team.OtherMemberIDs.count)
+        for memberID in coopertion.Team.OtherMemberIDs {
+            Reward.MemberRewards[memberID] = restAverageReward
+            totalRewards -= restAverageReward
+        }
+        
+        let restReward = totalRewards
+        Reward.MemberRewards[coopertion.Team.TeamLeaderID] = restReward
         coopertion.Reward = Reward
     }
 }
 
 
-
-class TeamUpMethodology_Follower:TeamUpMethodology{
+class TeamFollowMethodology_ConservativeRewardFollower:TeamFollowMethodology{
     override func AcceptInvite(from creature:Creature,
                                to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        return teams.randomPick()
-    }
-    
-}
-
-class TeamUpMethodology_ConservativeFollower:TeamUpMethodology{
-    override func AcceptInvite(from creature:Creature,
-                               to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        let leaderIDs = teams.map { $0.Team.TeamLeaderID}
+        if nil == super.AcceptInvite(from: creature, to: teams) {
+            return nil
+        }
+        let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
         let scores = leaderIDs.map { (leaderID) -> (String,Double) in
             let memorySlices = creature.memory.thinkOfMemory(Of: leaderID)
             guard memorySlices.count > 0 else {
-                return (leaderID, teamWorkBaseReword/2)
+                return (leaderID, teamWorkConservativeReword)
             }
-            let rewards = memorySlices.map{$0.Reward?.memberRewards[creature.identifier.uniqueID] ?? Double(0)}
+            let rewards = memorySlices.map{$0.Reward?.MemberRewards[creature.identifier.uniqueID] ?? Double(0)}
             let averageRewards = (rewards.reduce(0, +))/Double(rewards.count)
             return (leaderID,averageRewards)
             }.sorted  { $0.1 > $1.1 }
@@ -211,20 +285,24 @@ class TeamUpMethodology_ConservativeFollower:TeamUpMethodology{
         return teams.randomPick()
     }
     
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .AllIn
+    }
 }
 
-let teamWorkIdealReword:RewardResource = teamWorkBaseReword
-
-class TeamUpMethodology_EliteFollower:TeamUpMethodology{
+class TeamFollowMethodology_SelfishRewardFollower:TeamFollowMethodology{
     override func AcceptInvite(from creature:Creature,
                                to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        let leaderIDs = teams.map { $0.Team.TeamLeaderID}
+        if nil == super.AcceptInvite(from: creature, to: teams) {
+            return nil
+        }
+        let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
         let scores = leaderIDs.map { (leaderID) -> (String,Double) in
             let memorySlices = creature.memory.thinkOfMemory(Of: leaderID)
             guard memorySlices.count > 0 else {
                 return (leaderID,teamWorkIdealReword)
             }
-            let rewards = memorySlices.map{$0.Reward?.memberRewards[creature.identifier.uniqueID] ?? Double(0)}
+            let rewards = memorySlices.map{$0.Reward?.MemberRewards[creature.identifier.uniqueID] ?? Double(0)}
             let averageRewards = (rewards.reduce(0, +))/Double(rewards.count)
             return (leaderID,averageRewards)
             }.sorted  { $0.1 > $1.1 }
@@ -235,4 +313,80 @@ class TeamUpMethodology_EliteFollower:TeamUpMethodology{
         return teams.randomPick()
     }
     
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .AllIn
+    }
+
 }
+
+class TeamFollowMethodology_FairFollower:TeamFollowMethodology{
+    override func AcceptInvite(from creature:Creature,
+                               to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        if nil == super.AcceptInvite(from: creature, to: teams) {
+            return nil
+        }
+        let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
+        let scores = leaderIDs.map { (leaderID) -> (String,Int) in
+            let memorySlices = creature.memory.thinkOfMemory(Of: leaderID)
+            guard memorySlices.count > 0 else {
+                return (leaderID,0)
+            }
+            
+            let fair = memorySlices.map({ (cooperation) -> Bool in
+                guard let reward = cooperation.Reward else {
+                    return false
+                }
+                
+                guard let randomOtherMemberID = cooperation.Team.OtherMemberIDs.randomPick() else {
+                    return false
+                }
+                
+                guard let otherReward = reward.MemberRewards[randomOtherMemberID] else {
+                    return false
+                }
+                
+                guard let leaderReward = reward.MemberRewards[leaderID] else {
+                    return false
+                }
+                
+                return (otherReward >= leaderReward)
+            })
+            
+            let score = fair.reduce(0, { (result, fair) -> Int in
+                return result + (fair ? 1 : 0)
+            })
+            return (leaderID,score)
+            }.sorted  { $0.1 > $1.1 }
+        
+        if let bestLeaderID = scores.first?.0,
+            let bestTeam = teams.first(where: { $0.Team.TeamLeaderID == bestLeaderID}) {
+            return bestTeam
+        }
+        return teams.randomPick()
+    }
+    
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .AllIn
+    }
+
+}
+
+class TeamFollowMethodology_ConservativeRewardFollower_Lazy:TeamFollowMethodology_ConservativeRewardFollower{
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .Lazy
+    }
+}
+
+class TeamFollowMethodology_SelfishRewardFollower_Lazy:TeamFollowMethodology_SelfishRewardFollower{
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .Lazy
+    }
+}
+
+class TeamFollowMethodology_FairFollower_Lazy:TeamFollowMethodology_FairFollower{
+    override func WorkingEffort(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        return .Lazy
+    }
+}
+
+

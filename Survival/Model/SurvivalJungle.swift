@@ -14,7 +14,7 @@ struct CreatureSocialGroup {
 
 class SurvivalJungle {
     var jungleTotalResource:RewardResource
-    var seasonNumber:Int
+    var currentSeason:Int
     var creatureNumber:Int
 
     var allCreatures:[Creature] = []
@@ -23,19 +23,25 @@ class SurvivalJungle {
     
     var statistic:[SurvivalStatistic] = []
     
-    init(totalResource:Double, totalSeasonNumber:Int, averageCreatureNumber:Int) {
+    init(totalResource:Double, averageCreatureNumber:Int) {
         jungleTotalResource = totalResource
-        seasonNumber = totalSeasonNumber
         creatureNumber = averageCreatureNumber
+        currentSeason = 0
         self.initialCreatureGroup()
     }
     
     func initialCreatureGroup() {
         for index in 1...creatureNumber {
-            allCreatures.append(FairLeader(familyName: "Fair Leader", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(FairLeader(familyName: "FairLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(FairNoLazyLeader(familyName: "FairNoLazyLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
             allCreatures.append(SelfishLeader(familyName: "SelfishLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(EliteFollower(familyName: "EliteFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(ConservativeFollower(familyName: "ConservativeFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(BetterSelfishLeader(familyName: "BetterSelfishLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(SelfishRewardFollower(familyName: "SelfishRewardFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(FairFollower(familyName: "FairFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(ConservativeRewardFollower(familyName: "ConservativeRewardFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+//            allCreatures.append(SelfishRewardLazyFollower(familyName: "SelfishRewardLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+//            allCreatures.append(FairLazyFollower(familyName: "FairLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+//            allCreatures.append(ConservativeRewardLazyFollower(familyName: "ConservativeRewardLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
         }
         allCreatures.shuffle()
     }
@@ -59,8 +65,9 @@ class SurvivalJungle {
         }
     }
     
-    func SandboxStart() -> [SurvivalStatistic]{
-        for season in 1...seasonNumber{
+    func Run(_ seasonNumber:Int) -> [SurvivalStatistic]{
+        for _ in currentSeason...currentSeason+seasonNumber{
+            currentSeason += 1;
             var seasonResource = jungleTotalResource
             let social = SocialBehavior(with: allCreatures, seasonResource:&seasonResource)
             social.TeamWork()
@@ -74,11 +81,17 @@ class SurvivalJungle {
             self.CreaturesAging()
 //            social.statistic.countResource(in: allCreatures)
             social.statistic["FairLeader"] = Double(allCreatures.findAllCeatures(Of: "FairLeader").count)
+            social.statistic["FairNoLazyLeader"] = Double(allCreatures.findAllCeatures(Of: "FairNoLazyLeader").count)
             social.statistic["SelfishLeader"] = Double(allCreatures.findAllCeatures(Of: "SelfishLeader").count)
-            social.statistic["EliteFollower"] = Double(allCreatures.findAllCeatures(Of: "EliteFollower").count)
-            social.statistic["ConservativeFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeFollower").count)
+            social.statistic["BetterSelfishLeader"] = Double(allCreatures.findAllCeatures(Of: "BetterSelfishLeader").count)
+            social.statistic["SelfishRewardFollower"] = Double(allCreatures.findAllCeatures(Of: "SelfishRewardFollower").count)
+            social.statistic["FairFollower"] = Double(allCreatures.findAllCeatures(Of: "FairFollower").count)
+            social.statistic["ConservativeRewardFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeRewardFollower").count)
+//            social.statistic["SelfishRewardLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "SelfishRewardLazyFollower").count)
+//            social.statistic["FairLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "FairLazyFollower").count)
+//            social.statistic["ConservativeRewardLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeRewardLazyFollower").count)
             statistic.append(social.statistic)
-            print("season-\(season):\(social.statistic)")
+            print("season-\(currentSeason):\(social.statistic)")
         }
         return statistic
     }
