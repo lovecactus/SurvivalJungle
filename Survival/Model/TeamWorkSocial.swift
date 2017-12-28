@@ -6,15 +6,20 @@
 //  Copyright © 2017 GINOFF. All rights reserved.
 //
 
-typealias WorkingEffort = Double
+typealias EffortValue = Double
+let YoungEffortBase:EffortValue = 5
+let MaturedEffortBase:EffortValue = 10
+let OldEffortBase:EffortValue = 5
+let DyingEffortBase:EffortValue = 1
 
 
-let teamStartUpCost:RewardResource = 5
+let teamStartUpCost:RewardResource = 0
 let teamBounsReward:RewardResource = teamStartUpCost*2
-let teamWorkBaseReword:RewardResource = 5
+let teamWorkBaseReword:RewardResource = 2
 let teamWorkBaseCost:WorkingCostResource = 5
 
-let wasteTimeResource:SurvivalResource = teamWorkBaseReword
+let wasteTimeResource:SurvivalResource = 3
+
 
 struct CooperationTeam {
     var TeamLeaderID:CreatureUniqueID
@@ -25,30 +30,32 @@ struct CooperationTeam {
 }
 
 struct CooperationAction {
-    var MemberActions:[CreatureUniqueID:TeamCooperationEffort]
-    
-    func TotalEffort() -> WorkingEffort{
-        let teamWorkingEffort = self.MemberActions.enumerated().reduce(0, { (result, action) -> WorkingEffort in
-            let workingEffort:WorkingEffort
-            switch action.element.value {
+    var memberActions:[CreatureUniqueID:TeamCooperationEffort]
+    var workingCosts:[CreatureUniqueID:WorkingCostResource]
+
+    func TotalEffort() -> EffortValue{
+        let teamWorkingValue = self.memberActions.enumerated().reduce(0, { (result, action) -> EffortValue in
+            let attitudeRate:TeamCooperationAttitudeRate
+            switch action.element.value.Attitude {
             case .AllIn:
-                workingEffort = 5
+                attitudeRate = .AllInRate
                 break
             case .Responsive:
-                workingEffort = 3
+                attitudeRate = .ResponsiveRate
                 break
             case .Lazy:
-                workingEffort = 1
+                attitudeRate = .LazyRate
                 break
             }
-            return result+workingEffort
+            let workingValue = action.element.value.Value*attitudeRate.rawValue
+            return result+workingValue
         })
-        return teamWorkingEffort
+        return teamWorkingValue
     }
     
     func WorkMemberCount() -> Int{
-        let workMemberCount = self.MemberActions.enumerated().reduce(0, { (result, action) -> Int in
-            switch action.element.value {
+        let workMemberCount = self.memberActions.enumerated().reduce(0, { (result, action) -> Int in
+            switch action.element.value.Attitude {
             case .AllIn:
                 return result + 1
             case .Responsive:
@@ -65,10 +72,22 @@ struct CooperationGoal {
     var Succeed:Bool
 }
 
-enum TeamCooperationEffort {
+struct TeamCooperationEffort{
+    var Attitude:TeamCooperationAttitude
+    var Age:Int
+    var Value:EffortValue
+}
+
+enum TeamCooperationAttitude {
     case Lazy
     case Responsive
     case AllIn
+}
+
+enum TeamCooperationAttitudeRate : Double{
+    case LazyRate = 0.2
+    case ResponsiveRate = 0.7
+    case AllInRate = 1
 }
 
 struct CooperationReward {
@@ -79,7 +98,7 @@ struct CooperationReward {
 struct TeamWorkCooperation{
     init(Team:CooperationTeam, TeamProposal:CooperationTeam) {
         Goal = CooperationGoal(Succeed: false)
-        Action = CooperationAction(MemberActions: [:])
+        Action = CooperationAction(memberActions: [:], workingCosts: [:])
         Reward = nil
         self.Team = Team
         self.TeamProposal = TeamProposal

@@ -34,17 +34,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
         // Override point for customization after application launch.
-        let jungle = SurvivalJungle(totalResource: 1500.0, averageCreatureNumber: 20)
-        for _ in 1...INT_MAX {
-            let survivalStatic = jungle.Run(20)
-            let statisticsVC = LineChartStaticsViewController(Statistic: survivalStatic)
-            self.window?.rootViewController = statisticsVC
-            Wait(3, closure: {
-                //dummy
-            })
-            print("Survived:"+String(jungle.allCreatures.count))
-            print("Died:"+String(jungle.diedCreatures.count))
-            print("Check statics")
+        let statisticsVC = LineChartStaticsViewController(Statistic: [])
+        self.window?.rootViewController = statisticsVC
+        DispatchQueue.global(qos: .default).async {
+            let jungle = SurvivalJungle(totalResource: 2000, averageCreatureNumber: 200)
+            for _ in 1...INT_MAX {
+                let survivalStatic = jungle.Run(10)
+                DispatchQueue.main.async {
+                    statisticsVC.updateStaticsData(survivalStatic)
+                }
+                
+                if (jungle.allCreatures.count < 30){
+                    print("Creature extinction!")
+                }
+                print("Survived:"+String(jungle.allCreatures.count))
+                print("Died:"+String(jungle.diedCreatures.count))
+                print("Check statics")
+            }
         }
     }
 

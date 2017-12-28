@@ -32,17 +32,11 @@ class SurvivalJungle {
     
     func initialCreatureGroup() {
         for index in 1...creatureNumber {
-            allCreatures.append(FairLeader(familyName: "FairLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
-//            allCreatures.append(FairNoLazyLeader(familyName: "FairNoLazyLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(SelfishLeader(familyName: "SelfishLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(BetterSelfishLeader(familyName: "BetterSelfishLeader", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(BetterSelfishAdapter(familyName: "BetterSelfishAdapter", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(SelfishRewardFollower(familyName: "SelfishRewardFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(FairFollower(familyName: "FairFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-            allCreatures.append(ConservativeRewardFollower(familyName: "ConservativeRewardFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-//            allCreatures.append(SelfishRewardLazyFollower(familyName: "SelfishRewardLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-//            allCreatures.append(FairLazyFollower(familyName: "FairLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
-//            allCreatures.append(ConservativeRewardLazyFollower(familyName: "ConservativeRewardLazyFollower", givenName: String(index), age: Int(arc4random_uniform(50))))
+            allCreatures.append(GenericSpecies.init(familyName: "Generic",
+                                                    givenName: String(index),
+                                                    methodology: Methodology.randomMethodGenerator(),
+                                                    age: Int(arc4random_uniform(50))))
+
         }
         allCreatures.shuffle()
     }
@@ -71,29 +65,30 @@ class SurvivalJungle {
             currentSeason += 1;
             var seasonResource = jungleTotalResource
             let social = SocialBehavior(with: allCreatures, seasonResource:&seasonResource)
-            social.TeamWork()
+            social.SeasonWork()
 
             let newBornCreatures = social.CreaturesReproduction()
             allCreatures.append(contentsOf: newBornCreatures)
-
+            
             let seasonDiedCreature = self.CreaturesSurvival()
             diedCreatures.append(contentsOf: seasonDiedCreature)
             
             self.CreaturesAging()
 //            social.statistic.countResource(in: allCreatures)
-            social.statistic["FairLeader"] = Double(allCreatures.findAllCeatures(Of: "FairLeader").count)
-//            social.statistic["FairNoLazyLeader"] = Double(allCreatures.findAllCeatures(Of: "FairNoLazyLeader").count)
-            social.statistic["SelfishLeader"] = Double(allCreatures.findAllCeatures(Of: "SelfishLeader").count)
-            social.statistic["BetterSelfishLeader"] = Double(allCreatures.findAllCeatures(Of: "BetterSelfishLeader").count)
-            social.statistic["BetterSelfishAdapter"] = Double(allCreatures.findAllCeatures(Of: "BetterSelfishAdapter").count)
-            social.statistic["SelfishRewardFollower"] = Double(allCreatures.findAllCeatures(Of: "SelfishRewardFollower").count)
-            social.statistic["FairFollower"] = Double(allCreatures.findAllCeatures(Of: "FairFollower").count)
-            social.statistic["ConservativeRewardFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeRewardFollower").count)
-//            social.statistic["SelfishRewardLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "SelfishRewardLazyFollower").count)
-//            social.statistic["FairLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "FairLazyFollower").count)
-//            social.statistic["ConservativeRewardLazyFollower"] = Double(allCreatures.findAllCeatures(Of: "ConservativeRewardLazyFollower").count)
+            for methodologyDescriptor in allCreatures.findAllCreatureMethodology() {
+                social.statistic["Species:"+methodologyDescriptor] = Double(allCreatures.findAllCreatureWith(methodDescriptor:methodologyDescriptor).count)
+            }
+            social.statistic["Method:ReproLoveChild"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"ReproLoveChild").count)
+            social.statistic["Method:ReproNormal"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"ReproNormal").count)
+            social.statistic["Method:Adapter"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Adapter").count)
+            social.statistic["Method:Follower"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Follower").count)
+            social.statistic["Method:Leader"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Leader").count)
+            social.statistic["CreatureCount"] = Double(allCreatures.findAllCreatureMethodology().count)
+
             statistic.append(social.statistic)
-            print("season-\(currentSeason):\(social.statistic)")
+            print("season-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == false && $0.key.hasPrefix("Method:") == false})")
+            print("method-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Method:") == true })")
+            print("species-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == true })")
         }
         return statistic
     }
@@ -107,20 +102,48 @@ extension Array {
             return String(describing: type(of: Element)) == CreatureTypeName
         })
     }
+    
 }
 
 
 extension Array where Element : Creature {
     func findAllDie(By DieReason:String) -> [Creature] {
         return self.filter({ (DieCreature) -> Bool in
-            return DieCreature.Story.last == DieReason
+            guard let lastWords = DieCreature.Story.last, lastWords.contains("Die by") else {
+                return false
+            }
+            return lastWords.contains(DieReason)
         })
     }
+    
     func findCreatureBy(name:String) -> Creature? {
         return self.first(where:{ (FindCreature) -> Bool in
             return (FindCreature.identifier.familyName+FindCreature.identifier.givenName == name)
         })
     }
+    
+    func findAllCreatureBy(familyName:String) -> [Creature] {
+        return self.filter({ (FindCreature) -> Bool in
+            return (FindCreature.identifier.familyName == familyName)
+        })
+    }
+
+    func findAllCreatureMethodology() -> [String] {
+        return self.map({$0.method.descriptor()}).removeDuplicates()
+    }
+
+    func findAllCreatureWith(methodDescriptor:String) -> [Creature] {
+        return self.filter({ (FindCreature) -> Bool in
+            return (FindCreature.method.descriptor().contains(methodDescriptor))
+        })
+    }
+    
+    func findAllCreatureWith(fullMethodDescriptor:String) -> [Creature] {
+        return self.filter({ (FindCreature) -> Bool in
+            return (FindCreature.method.detailDescriptor().contains(fullMethodDescriptor))
+        })
+    }
+    
     mutating func removeFirstCreatureBy(uniqueID:String) -> Bool {
         var findCreatures = false
         for index in 0...self.count-1 {
@@ -136,6 +159,23 @@ extension Array where Element : Creature {
     func findCreatureBy(uniqueID:String) -> Creature? {
         return self.first(where:{ (FindCreature) -> Bool in
             return (FindCreature.identifier.uniqueID == uniqueID)
+        })
+    }
+
+    func findAllMethodology(Including methodName:String) -> [Creature] {
+        return self.filter({ (creature) -> Bool in
+            guard let methodyDict = try? creature.method.allProperties() else {
+                return false
+            }
+            var find = false
+            for (_, value) in methodyDict.enumerated(){
+                let valueString = String(describing: type(of: value.value.self))
+                if valueString.range(of:methodName) != nil {
+                    find = true
+                    break
+                }
+            }
+            return find
         })
     }
 

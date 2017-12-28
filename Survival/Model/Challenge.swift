@@ -9,6 +9,8 @@
 import Foundation
 
 let DieForAge:Int = 200
+let MatureAge:Int = DieForAge/10
+let OldAge:Int = DieForAge/2
 let CreatureSurviveScore:Double = -200
 
 class Challenge {

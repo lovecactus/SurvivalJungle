@@ -41,11 +41,12 @@ extension Array {
     }
     
     func randomPick(some PickNumber:Int) -> [Element]? {
-        guard !isEmpty, PickNumber<=count, PickNumber > 0 else {
+        guard !isEmpty, PickNumber > 0 else {
             return nil
         }
         
-        return Array(self.shuffled()[0..<PickNumber])
+        let randomPickNumber = (PickNumber<count) ? PickNumber : count
+        return Array(self.shuffled()[0..<randomPickNumber])
     }
 }
 
@@ -95,3 +96,46 @@ extension Array where Element: FloatingPoint {
         return isEmpty ? 0 : total / Element(count)
     }
 }
+
+extension Array where Element:Equatable {
+    func removeDuplicates() -> [Element] {
+        var result = [Element]()
+        
+        for value in self {
+            if result.contains(value) == false {
+                result.append(value)
+            }
+        }
+        
+        return result
+    }
+}
+
+protocol Loopable {
+    func allProperties() throws -> [String: Any]
+}
+
+extension Loopable {
+    func allProperties() throws -> [String: Any] {
+        
+        var result: [String: Any] = [:]
+        
+        let mirror = Mirror(reflecting: self)
+        
+        // Optional check to make sure we're iterating over a struct or class
+        guard let style = mirror.displayStyle, style == .struct || style == .class else {
+            throw NSError()
+        }
+        
+        for (property, value) in mirror.children {
+            guard let property = property else {
+                continue
+            }
+            
+            result[property] = value
+        }
+        
+        return result
+    }
+}
+

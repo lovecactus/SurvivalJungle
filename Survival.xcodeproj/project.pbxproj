@@ -9,10 +9,13 @@
 /* Begin PBXBuildFile section */
 		4398ED884EE5DB8CE9901F67 /* Pods_Survival.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 46380B6CB1225306CCFEE387 /* Pods_Survival.framework */; };
 		442CC62C1F82264800119A1D /* RoutineHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 442CC62B1F82264800119A1D /* RoutineHelper.swift */; };
+		4431BD761FF38A8400D3103B /* Methodology_Reproduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4431BD751FF38A8400D3103B /* Methodology_Reproduction.swift */; };
 		4436F65D1F8FB79B00B22324 /* Methodology.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4436F65C1F8FB79B00B22324 /* Methodology.swift */; };
+		44417C001FE2C0AE009B19B5 /* Species.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44417BFF1FE2C0AE009B19B5 /* Species.swift */; };
 		44448BAE1FCC0C3C0027D237 /* TeamWorkSocial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44448BAD1FCC0C3C0027D237 /* TeamWorkSocial.swift */; };
-		44448BB01FCC0C600027D237 /* PairWorkSocial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44448BAF1FCC0C600027D237 /* PairWorkSocial.swift */; };
 		44448BB41FCC0EAD0027D237 /* SurvivalStatistic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44448BB31FCC0EAD0027D237 /* SurvivalStatistic.swift */; };
+		448CE6C81FECCDAF00A78D05 /* Methodology_TeamLead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */; };
+		448CE6CA1FECCDE000A78D05 /* Methodology_TeamFollow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */; };
 		44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289BE1F7174E500825BD4 /* AppDelegate.swift */; };
 		44B289C11F7174E500825BD4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289C01F7174E500825BD4 /* ViewController.swift */; };
 		44B289C41F7174E500825BD4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44B289C21F7174E500825BD4 /* Main.storyboard */; };
@@ -54,10 +57,13 @@
 		33DD4E7982AA8074E3751E01 /* Pods-SurvivalTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SurvivalTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SurvivalTests/Pods-SurvivalTests.release.xcconfig"; sourceTree = "<group>"; };
 		3B7E40393E8282C31093FCB3 /* Pods_SurvivalUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SurvivalUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		442CC62B1F82264800119A1D /* RoutineHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineHelper.swift; sourceTree = "<group>"; };
+		4431BD751FF38A8400D3103B /* Methodology_Reproduction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_Reproduction.swift; sourceTree = "<group>"; };
 		4436F65C1F8FB79B00B22324 /* Methodology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology.swift; sourceTree = "<group>"; };
+		44417BFF1FE2C0AE009B19B5 /* Species.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Species.swift; sourceTree = "<group>"; };
 		44448BAD1FCC0C3C0027D237 /* TeamWorkSocial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamWorkSocial.swift; sourceTree = "<group>"; };
-		44448BAF1FCC0C600027D237 /* PairWorkSocial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairWorkSocial.swift; sourceTree = "<group>"; };
 		44448BB31FCC0EAD0027D237 /* SurvivalStatistic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalStatistic.swift; sourceTree = "<group>"; };
+		448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_TeamLead.swift; sourceTree = "<group>"; };
+		448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_TeamFollow.swift; sourceTree = "<group>"; };
 		44B289BB1F7174E500825BD4 /* Survival.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Survival.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B289BE1F7174E500825BD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		44B289C01F7174E500825BD4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -113,6 +119,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		448CE6C61FECCD8700A78D05 /* Methodology */ = {
+			isa = PBXGroup;
+			children = (
+				4436F65C1F8FB79B00B22324 /* Methodology.swift */,
+				448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */,
+				448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */,
+				4431BD751FF38A8400D3103B /* Methodology_Reproduction.swift */,
+			);
+			path = Methodology;
+			sourceTree = "<group>";
+		};
 		44B289B21F7174E500825BD4 = {
 			isa = PBXGroup;
 			children = (
@@ -180,16 +197,16 @@
 		44ED56C41F7BF2DB0049CBCF /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				448CE6C61FECCD8700A78D05 /* Methodology */,
 				44448BB31FCC0EAD0027D237 /* SurvivalStatistic.swift */,
 				44ED56C01F7B82550049CBCF /* LineChartStaticsViewController.swift */,
 				44ED56C51F7BF2DB0049CBCF /* Challenge.swift */,
 				44ED56C61F7BF2DB0049CBCF /* Creature.swift */,
 				44ED56C81F7BF2DB0049CBCF /* SocialBehavior.swift */,
 				44ED56C91F7BF2DB0049CBCF /* SurvivalJungle.swift */,
-				4436F65C1F8FB79B00B22324 /* Methodology.swift */,
 				44FCB6AB1F964A740081EB41 /* CreatureMemory.swift */,
 				44448BAD1FCC0C3C0027D237 /* TeamWorkSocial.swift */,
-				44448BAF1FCC0C600027D237 /* PairWorkSocial.swift */,
+				44417BFF1FE2C0AE009B19B5 /* Species.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -513,12 +530,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				448CE6CA1FECCDE000A78D05 /* Methodology_TeamFollow.swift in Sources */,
 				44448BB41FCC0EAD0027D237 /* SurvivalStatistic.swift in Sources */,
-				44448BB01FCC0C600027D237 /* PairWorkSocial.swift in Sources */,
 				44448BAE1FCC0C3C0027D237 /* TeamWorkSocial.swift in Sources */,
+				4431BD761FF38A8400D3103B /* Methodology_Reproduction.swift in Sources */,
 				44ED56CD1F7BFA800049CBCF /* Challenge.swift in Sources */,
 				44ED56CA1F7BFA710049CBCF /* SurvivalJungle.swift in Sources */,
 				44B289C11F7174E500825BD4 /* ViewController.swift in Sources */,
+				448CE6C81FECCDAF00A78D05 /* Methodology_TeamLead.swift in Sources */,
 				44ED56CF1F7BFAF40049CBCF /* Extensions.swift in Sources */,
 				44ED56CC1F7BFA7D0049CBCF /* Creature.swift in Sources */,
 				442CC62C1F82264800119A1D /* RoutineHelper.swift in Sources */,
@@ -526,6 +545,7 @@
 				44ED56C11F7B82550049CBCF /* LineChartStaticsViewController.swift in Sources */,
 				44FCB6AC1F964A740081EB41 /* CreatureMemory.swift in Sources */,
 				44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */,
+				44417C001FE2C0AE009B19B5 /* Species.swift in Sources */,
 				4436F65D1F8FB79B00B22324 /* Methodology.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -12,7 +12,7 @@ typealias SurvivalResource = Double
 typealias RewardResource = SurvivalResource
 typealias WorkingCostResource = SurvivalResource
 
-let resourceLimitRate:RewardResource = 20
+let resourceLimitRate:RewardResource = 0.8
 
 class SocialBehavior {
     var creatures:[Creature]
@@ -23,23 +23,23 @@ class SocialBehavior {
         self.creatures = creatures
         self.seasonResource = seasonResource
     }
-
-    func TeamWork() {
+    
+    func SeasonWork() {
         let tuple = self.TeamUp(by: self.AssambleTeams())
         var cooperations = tuple.0
-        let failedCreatures = tuple.1
+        var failedCreatures = tuple.1
         self.TeamCompetes(&cooperations)
-        for index in cooperations.indices{
-            self.Work(as: &(cooperations[index]))
-            self.AssignReward(by: &(cooperations[index]))
-        }
+        self.TeamWork(&cooperations)
+        self.SingleWandering(&failedCreatures)
+//        self.Community()
+
         
-        for creatureID in failedCreatures.SingleCreatures {
-            creatures.findCreatureBy(uniqueID: creatureID)?.WasteTime()
-        }
-        
-//        statistic["Succeed Team"] = Double(cooperations.filter({ $0.Goal.Succeed}).count)
-        statistic["Team Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
+        statistic["Succeed Team"] = Double(cooperations.filter({ $0.Goal.Succeed}).count)
+        statistic["TeamUp Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
+        statistic["Leader Count"] = Double(cooperations.count)
+        statistic["Member Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).reduce(0, { (result, cooperation) -> Int in
+            return result + cooperation.Team.OtherMemberIDs.count
+            }))
         statistic["Single Wanderer"] = Double(failedCreatures.SingleCreatures.count)
     }
 
@@ -81,7 +81,7 @@ class SocialBehavior {
                 for (index, team) in gatheringTeams.enumerated() {
                     if team.TeamProposal.TeamLeaderID == acceptedTeam.TeamProposal.TeamLeaderID {
                         gatheringTeams[index].Team.OtherMemberIDs.append(memberID)
-                        gatheringTeams[index].Action.MemberActions[memberID] = creature.WorkEffort(to:team)
+                        gatheringTeams[index].Action.memberActions[memberID] = creature.WorkEffort(to:team)
                     }
                 }
                 _ = creaturesForTeamUp.removeFirstCreatureBy(uniqueID: memberID)
@@ -101,37 +101,39 @@ class SocialBehavior {
     
     func Work(as cooperation:inout TeamWorkCooperation){
         let totalTeamMember = cooperation.Action.WorkMemberCount()
+        let effort = cooperation.Action.TotalEffort()
         let bounsReward:RewardResource
         switch totalTeamMember {
         case 0...1:
             bounsReward = 0
             break
         case 2...4:
-            bounsReward = 5
+            bounsReward = 10
             break
         case 5...9:
-            bounsReward = 6
+            bounsReward = 20
             break
         case 10...Int.max:
-            bounsReward = 7
+            bounsReward = 30
             break
         default:
             bounsReward = 0
             break
         }
         
-        var workingAverage = teamWorkBaseReword+bounsReward
-        let maxAvailableAverage = seasonResource/resourceLimitRate
+        var totalReward = effort + bounsReward
+        let maxAvailableReward = seasonResource*resourceLimitRate
         
-        if (workingAverage <= maxAvailableAverage){
+        if (totalReward <= maxAvailableReward){
             cooperation.Goal.Succeed = true
         }else{
             //Not sufficent resource
             cooperation.Goal.Succeed = false
-            workingAverage = maxAvailableAverage
+            totalReward = maxAvailableReward
         }
 
-        var totalReward = Double(totalTeamMember) * workingAverage + teamBounsReward
+        totalReward = round(totalReward)
+        
         if (seasonResource >= totalReward) {
             seasonResource -= totalReward
         }else if (seasonResource > 0) {
@@ -143,23 +145,48 @@ class SocialBehavior {
         
         cooperation.Reward = CooperationReward(TotalRewards: totalReward, MemberRewards: [:])
 //        statistic["TotalReward"] = statistic.getStatstic(for: "TotalReward") + Double(cooperation.Reward?.totalRewards ?? 0)
-        if let leaderWorkingEffort = cooperation.Action.MemberActions[cooperation.Team.TeamLeaderID] {
-            creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID)?.WorkCost(leaderWorkingEffort)
+        if let leaderWorkingEffort = cooperation.Action.memberActions[cooperation.Team.TeamLeaderID] {
+            if let workingCreature = creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID) {
+                cooperation.Action.workingCosts[cooperation.Team.TeamLeaderID] = workingCreature.WorkCost(leaderWorkingEffort)
+                workingCreature.writeStory("Work with "+String(cooperation.Team.OtherMemberIDs.count)+" other members")
+            }
         }else{
             print(#function+": Critical error. Missing leader's effort ")
         }
         for memberID in cooperation.Team.OtherMemberIDs {
-            guard let workingEffort = cooperation.Action.MemberActions[memberID] else {
+            guard let workingEffort = cooperation.Action.memberActions[memberID] else {
                 print(#function+": Critical error. Missing member's effort ")
                 continue
             }
-            creatures.findCreatureBy(uniqueID: memberID)?.WorkCost(workingEffort)
+            if let workingCreature = creatures.findCreatureBy(uniqueID: memberID) {
+                cooperation.Action.workingCosts[memberID] = workingCreature.WorkCost(workingEffort)
+                
+                workingCreature.writeStory("Work with "+String(cooperation.Team.OtherMemberIDs.count)+" other members")
+            }
         }
     }
     
     func TeamCompetes(_ cooperations:inout [TeamWorkCooperation]){
         cooperations.shuffle()
         cooperations.sort { $0.Action.TotalEffort() > $1.Action.TotalEffort() }
+//        statistic["Avg. Competes"] = cooperations.map({$0.Action.TotalEffort()}).average
+    }
+
+    func TeamWork(_ cooperations:inout [TeamWorkCooperation]){
+        for index in cooperations.indices{
+            self.Work(as: &(cooperations[index]))
+            self.AssignReward(by: &(cooperations[index]))
+        }
+    }
+    
+    func SingleWandering(_ failedCreatures:inout FailedTeamUp){
+        for creatureID in failedCreatures.SingleCreatures {
+            creatures.findCreatureBy(uniqueID: creatureID)?.WasteTime()
+        }
+
+    }
+
+    func Community(){
     }
 
     func AssignReward(by cooperation:inout TeamWorkCooperation){
@@ -181,7 +208,7 @@ class SocialBehavior {
         var newBornCreatures:[Creature] = []
         
         creatures.forEach { (creature) in
-            if let newBornCreature = creature.selfReproduction(){
+            if let newBornCreature = creature.SelfReproduction(){
                 newBornCreatures.append(newBornCreature)
             }
         }

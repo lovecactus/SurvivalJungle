@@ -11,7 +11,7 @@ import Charts
 
 class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
     let ChartView = LineChartView()
-    let SurvivalStatic:[SurvivalStatistic]
+    var SurvivalStatic:[SurvivalStatistic]
     
     init(Statistic: [SurvivalStatistic]) {
         SurvivalStatic = Statistic
@@ -28,7 +28,7 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         // Do any additional setup after loading the view, typically from a nib.
         self.initialCharts()
         
-        ChartView.animate(xAxisDuration: 2.5)
+        ChartView.animate(xAxisDuration: 0.5)
         
         ChartView.data = self.setUpStaticsData(SurvivalStatic);
     }
@@ -72,6 +72,11 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         
     }
     
+    func updateStaticsData(_ statistics:[SurvivalStatistic]) {
+        SurvivalStatic = statistics
+        ChartView.data = self.setUpStaticsData(SurvivalStatic);
+    }
+    
     func setUpStaticsData(_ statistics:[SurvivalStatistic]) -> LineChartData?{
 
         var staticValues:[String:[ChartDataEntry]] = [:]
@@ -79,9 +84,22 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
             return nil
         }
         
-        for (key, _) in sampleStatistic {
+        guard let currentStatistic = statistics.last else {
+            return nil
+        }
+
+        
+        let generalStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == false })
+        let speciesStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == true })
+        for (key, _) in generalStatistic {
             let staticValue:[ChartDataEntry] = []
-            staticValues[key] = staticValue
+            if (key.hasPrefix(("Species:"))){
+                if let currentValue = currentStatistic[key], currentValue > 0 {
+                    staticValues[key] = staticValue
+                }
+            }else{
+                staticValues[key] = staticValue
+            }
         }
 
         for index in 0...statistics.count-1 {
