@@ -58,6 +58,10 @@ class CreatureMemory{
         return self.longTermMemory.teamWorkCooperation.reversed().first
     }
     
+    public func thinkOfSons() -> [CreatureUniqueID]{
+        return self.longTermMemory.creatureRelationShip.filter({$0.relationShip == .child}).map({$0.creatureID})
+    }
+    
     public func growMature(at age:Int) {
         let reproductionDesire:Double
         switch age {
@@ -83,6 +87,7 @@ class CreatureMemory{
     public func reproductionDesire() -> Double {
         return self.longTermMemory.reproductionDesire
     }
+    
     
 //    public func teachExperience() -> [LongTermMemorySlice] {
 //        var experienceMemory:[LongTermMemorySlice] = []

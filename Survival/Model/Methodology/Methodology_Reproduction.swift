@@ -8,15 +8,12 @@
 
 import Foundation
 
-let reproductionCost:Double = 60
+let reproductionCost:Double = 40
 let newBornResource:Double = reproductionCost
 
 
 let reproductionDesireThreshold:Double = Double((OldAge-MatureAge)*2/10)
-let reproductionResourceThreshold:Double = 100
-
-let reproductionAge:Int = 40
-let creatureReproductionThreshold:Double = 100
+let reproductionResourceThreshold:Double = 120
 
 class ReproductionMethodology {
     public static func reproductionRandomMethodGenerator() -> ReproductionMethodology {
@@ -34,7 +31,7 @@ class ReproductionMethodology {
         return method
     }
 
-    func ReadyToReproduction(of creature:Creature ) -> Bool {
+    func readyToReproduction(of creature:Creature ) -> Bool {
         if creature.memory.reproductionDesire() >= reproductionDesireThreshold ,
             creature.surviveResource >= reproductionResourceThreshold{
             return true
@@ -42,18 +39,18 @@ class ReproductionMethodology {
         return false
     }
 
-    func Reproduction(of creature:Creature) -> Creature {
+    func reproduction(of creature:Creature) -> Creature {
         let newBorn = type(of: creature).init(familyName: creature.identifier.familyName, givenName:creature.identifier.givenName+"#")
         newBorn.method = creature.method
         
-        let ChildrenInvest = self.ReproductionInvest()
+        let ChildrenInvest = self.reproductionInvest()
         newBorn.surviveResource += ChildrenInvest
         creature.surviveResource -= ChildrenInvest
         creature.memory.releaseReproductionDesire()
         return newBorn
     }
 
-    func ReproductionInvest() -> SurvivalResource {
+    func reproductionInvest() -> SurvivalResource {
         return 0
     }
 }
@@ -63,7 +60,7 @@ class ReproductionMethodology_Normal : ReproductionMethodology {
 }
 
 class ReproductionMethodology_LoveChildren : ReproductionMethodology{
-    override func ReproductionInvest() -> SurvivalResource {
+    override func reproductionInvest() -> SurvivalResource {
         return 40
     }
 }

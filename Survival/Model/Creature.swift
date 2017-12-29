@@ -9,19 +9,24 @@
 import Foundation
 
 protocol ReproductionProtocol {
-    func SelfReproduction() -> Creature?
+    func selfReproduction() -> Creature?
+}
+
+protocol ResourceTransferProtocol {
+    func giveResource(resource:SurvivalResource) -> SurvivalResource
+    func receiveResource(resource:SurvivalResource)
 }
 
 protocol WorkProtocol {
-    func TeamPropose(from creatures:[Creature]) -> TeamWorkCooperation?
+    func TeamPropose(from creatures:inout [Creature]) -> TeamWorkCooperation?
     func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?
     func WorkValue() -> EffortValue
 }
 
 protocol CommunicationProtocol {
-    func FindSomeOneToTalk() -> CreatureUniqueID
-    func Talk(to creature:Creature, story:LongTermMemorySlice)
-    func Listen(to creature:Creature, about story:LongTermMemorySlice)
+    func findSomeOneToTalk() -> CreatureUniqueID
+    func talk(to creature:Creature, story:LongTermMemorySlice)
+    func listen(to creature:Creature, about story:LongTermMemorySlice)
 }
 
 typealias CreatureUniqueID = String
@@ -35,7 +40,7 @@ struct Identifer {
     }
 }
 
-class Creature : ReproductionProtocol, CommunicationProtocol{
+class Creature : ReproductionProtocol, CommunicationProtocol, ResourceTransferProtocol{
     public var surviveResource:SurvivalResource = 0
     public let identifier:Identifer
     var age:Int = 0
@@ -65,34 +70,49 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
         memory.growMature(at: age)
     }
     
-    func SelfReproduction() -> Creature?{
-        let readyToReproduction = self.method.Reproduction.ReadyToReproduction(of: self)
+    func die(by reason:String, with creatures:inout [Creature]){
+        self.method.heritage.heritage(of: self, to: &creatures)
+        writeStory("Die by "+reason)
+    }
+    
+    func giveResource(resource: SurvivalResource) -> SurvivalResource{
+        let giveOutResource = (surviveResource > resource) ? resource : surviveResource
+        surviveResource -= giveOutResource
+        return giveOutResource
+    }
+    
+    func receiveResource(resource: SurvivalResource) {
+        surviveResource += resource
+    }
+    
+    func selfReproduction() -> Creature?{
+        let readyToReproduction = self.method.reproduction.readyToReproduction(of: self)
         if readyToReproduction {
             surviveResource -= reproductionCost
-            let newBorn = self.method.Reproduction.Reproduction(of: self)
+            let newBorn = self.method.reproduction.reproduction(of: self)
+            self.memory.remember(creatureID: newBorn.identifier.uniqueID, relation: .child)
             writeStory("Born a new herit")
             
             newBorn.writeStory("Born from parent:"+self.identifier.uniqueID)
+            newBorn.memory.remember(creatureID: self.identifier.uniqueID, relation: .parent)
             return newBorn
         }
         return nil
     }
     
-    func surviveChallenge() -> Bool {
+    func surviveChallenge() -> (Bool,String) {
         if OldChallenge().surviveChallenge(age) {
-            writeStory("Die by old")
-            return false
+            return (false, "old")
         }
 
         if StarveChallenge().surviveChallenge(surviveResource){
-            writeStory("Die by starve")
-            return false
+            return (false, "starve")
         }
-        return true
+        return (true, "")
     }
     
-    func TeamPropose(from creatures:[Creature]) -> TeamWorkCooperation? {
-        let TeamProposal = method.TeamLead.TeamPropose(from: self, on: creatures)
+    func teamPropose(from creatures:inout [Creature]) -> TeamWorkCooperation? {
+        let TeamProposal = method.teamLead.teamPropose(from: self, on: &creatures)
         if nil != TeamProposal {
             writeStory("Try leading a team, with cost:"+String(teamStartUpCost))
             surviveResource -= teamStartUpCost
@@ -100,8 +120,8 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
         return TeamProposal
     }
     
-    func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        guard let team = method.TeamFollow.AcceptInvite(from: self, to: teams) else {
+    func acceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        guard let team = method.teamFollow.AcceptInvite(from: self, to: teams) else {
             writeStory("Failed to accept all invitations... How did this happen?")
             return nil
         }
@@ -109,7 +129,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
         return team
     }
 
-    func WorkValue() -> EffortValue {
+    func workValue() -> EffortValue {
         let value:EffortValue
         switch age {
         case 0...MatureAge:
@@ -126,29 +146,29 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
         return value
     }
     
-    func WorkEffort(to team:TeamWorkCooperation) -> TeamCooperationEffort{
-        let attitude = method.TeamFollow.WorkingAttitude(from: self, to: team)
-        return TeamCooperationEffort(Attitude: attitude, Age: age, Value: self.WorkValue())
+    func workEffort(to team:TeamWorkCooperation) -> TeamCooperationEffort{
+        let attitude = method.teamFollow.WorkingAttitude(from: self, to: team)
+        return TeamCooperationEffort(Attitude: attitude, Age: age, Value: self.workValue())
     }
 
-    func WasteTime(){
+    func wasteTime(){
         surviveResource -= wasteTimeResource
         writeStory("Nothing to do, waste time wandering, cost:"+String(wasteTimeResource))
     }
 
-    func AssignReward(to coopertion:inout TeamWorkCooperation) {
+    func assignReward(to coopertion:inout TeamWorkCooperation) {
         writeStory("Assign rewards to members")
-        return method.TeamLead.AssignReward(to: &coopertion)
+        return method.teamLead.AssignReward(to: &coopertion)
     }
 
-    func WorkCost(_ effort:TeamCooperationEffort) -> WorkingCostResource{
+    func workCost(_ effort:TeamCooperationEffort) -> WorkingCostResource{
         let workingCost:SurvivalResource
         switch effort.Attitude {
         case .AllIn:
-            workingCost = 5
+            workingCost = 3
             break
         case .Responsive:
-            workingCost = 3
+            workingCost = 2
             break
         case .Lazy:
             workingCost = 1
@@ -156,25 +176,26 @@ class Creature : ReproductionProtocol, CommunicationProtocol{
         }
         writeStory("Working cost:"+String(workingCost)+" with attitude:"+String(describing: effort.Attitude)+" & value:"+String(describing: effort.Value))
         self.surviveResource -= workingCost
+        return workingCost
     }
 
-    func GetReward(_ rewardResource:RewardResource, as cooperation:TeamWorkCooperation) {
+    func getReward(_ rewardResource:RewardResource, as cooperation:TeamWorkCooperation) {
         writeStory("Get reward from team:"+String(rewardResource)+", leader:"+cooperation.Team.TeamLeaderID)
         self.surviveResource += rewardResource
         self.memory.remember(teamWorkCooperation: cooperation)
     }
     
-    func FindSomeOneToTalk() -> CreatureUniqueID {
+    func findSomeOneToTalk() -> CreatureUniqueID {
         let creatureID = ""
 //        self.method.Talk
         return creatureID
     }
     
-    func Talk(to creature: Creature, story: LongTermMemorySlice) {
+    func talk(to creature: Creature, story: LongTermMemorySlice) {
 //        memory.remember(teamWorkCooperation: <#T##TeamWorkCooperation#>)
     }
     
-    func Listen(to creature: Creature, about story: LongTermMemorySlice) {
+    func listen(to creature: Creature, about story: LongTermMemorySlice) {
 //        <#code#>
     }
 }

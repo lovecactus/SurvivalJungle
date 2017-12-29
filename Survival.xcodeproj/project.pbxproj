@@ -16,6 +16,7 @@
 		44448BB41FCC0EAD0027D237 /* SurvivalStatistic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44448BB31FCC0EAD0027D237 /* SurvivalStatistic.swift */; };
 		448CE6C81FECCDAF00A78D05 /* Methodology_TeamLead.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */; };
 		448CE6CA1FECCDE000A78D05 /* Methodology_TeamFollow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */; };
+		44AAAF021FF5456F007F3762 /* Methodology_Heritage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AAAF011FF5456F007F3762 /* Methodology_Heritage.swift */; };
 		44B289BF1F7174E500825BD4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289BE1F7174E500825BD4 /* AppDelegate.swift */; };
 		44B289C11F7174E500825BD4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B289C01F7174E500825BD4 /* ViewController.swift */; };
 		44B289C41F7174E500825BD4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 44B289C21F7174E500825BD4 /* Main.storyboard */; };
@@ -64,6 +65,7 @@
 		44448BB31FCC0EAD0027D237 /* SurvivalStatistic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalStatistic.swift; sourceTree = "<group>"; };
 		448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_TeamLead.swift; sourceTree = "<group>"; };
 		448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_TeamFollow.swift; sourceTree = "<group>"; };
+		44AAAF011FF5456F007F3762 /* Methodology_Heritage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Methodology_Heritage.swift; sourceTree = "<group>"; };
 		44B289BB1F7174E500825BD4 /* Survival.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Survival.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44B289BE1F7174E500825BD4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		44B289C01F7174E500825BD4 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 				448CE6C71FECCDAF00A78D05 /* Methodology_TeamLead.swift */,
 				448CE6C91FECCDE000A78D05 /* Methodology_TeamFollow.swift */,
 				4431BD751FF38A8400D3103B /* Methodology_Reproduction.swift */,
+				44AAAF011FF5456F007F3762 /* Methodology_Heritage.swift */,
 			);
 			path = Methodology;
 			sourceTree = "<group>";
@@ -538,6 +541,7 @@
 				44ED56CA1F7BFA710049CBCF /* SurvivalJungle.swift in Sources */,
 				44B289C11F7174E500825BD4 /* ViewController.swift in Sources */,
 				448CE6C81FECCDAF00A78D05 /* Methodology_TeamLead.swift in Sources */,
+				44AAAF021FF5456F007F3762 /* Methodology_Heritage.swift in Sources */,
 				44ED56CF1F7BFAF40049CBCF /* Extensions.swift in Sources */,
 				44ED56CC1F7BFA7D0049CBCF /* Creature.swift in Sources */,
 				442CC62C1F82264800119A1D /* RoutineHelper.swift in Sources */,

@@ -18,7 +18,7 @@ let teamBounsReward:RewardResource = teamStartUpCost*2
 let teamWorkBaseReword:RewardResource = 2
 let teamWorkBaseCost:WorkingCostResource = 5
 
-let wasteTimeResource:SurvivalResource = 3
+let wasteTimeResource:SurvivalResource = 1
 
 
 struct CooperationTeam {
@@ -54,17 +54,18 @@ struct CooperationAction {
     }
     
     func WorkMemberCount() -> Int{
-        let workMemberCount = self.memberActions.enumerated().reduce(0, { (result, action) -> Int in
-            switch action.element.value.Attitude {
-            case .AllIn:
-                return result + 1
-            case .Responsive:
-                return result + 1
-            case .Lazy:
-                return result
-            }
-        })
-        return workMemberCount
+        return self.memberActions.count
+//        let workMemberCount = self.memberActions.enumerated().reduce(0, { (result, action) -> Int in
+//            switch action.element.value.Attitude {
+//            case .AllIn:
+//                return result + 1
+//            case .Responsive:
+//                return result + 1
+//            case .Lazy:
+//                return result
+//            }
+//        })
+//        return workMemberCount
     }
 }
 
@@ -86,7 +87,7 @@ enum TeamCooperationAttitude {
 
 enum TeamCooperationAttitudeRate : Double{
     case LazyRate = 0.2
-    case ResponsiveRate = 0.7
+    case ResponsiveRate = 0.5
     case AllInRate = 1
 }
 

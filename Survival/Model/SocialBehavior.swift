@@ -34,19 +34,21 @@ class SocialBehavior {
 //        self.Community()
 
         
-        statistic["Succeed Team"] = Double(cooperations.filter({ $0.Goal.Succeed}).count)
-        statistic["TeamUp Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
+//        statistic["Succeed Team"] = Double(cooperations.filter({ $0.Goal.Succeed}).count)
+//        statistic["TeamUp Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).count)
         statistic["Leader Count"] = Double(cooperations.count)
         statistic["Member Count"] = Double(cooperations.filter({ $0.Team.OtherMemberIDs.count > 0 }).reduce(0, { (result, cooperation) -> Int in
             return result + cooperation.Team.OtherMemberIDs.count
             }))
         statistic["Single Wanderer"] = Double(failedCreatures.SingleCreatures.count)
+//        statistic["Total Income"] = cooperations.map({$0.Reward?.MemberRewards}).flatMap({$0}).flatMap({$0}).map({(key: CreatureUniqueID, value: RewardResource) -> RewardResource in return value}).reduce(0, +)
+        statistic["Total Cost"] = cooperations.map({$0.Action.workingCosts}).flatMap({$0}).flatMap({ (key:CreatureUniqueID, value: WorkingCostResource) -> WorkingCostResource? in return value}).reduce(0, +)
     }
 
     func AssambleTeams() -> [TeamWorkCooperation]{
         var teamProposals:[TeamWorkCooperation] = []
         for creature in creatures {
-            if let teamProposal = creature.TeamPropose(from: creatures) {
+            if let teamProposal = creature.teamPropose(from: &creatures) {
                 teamProposals.append(teamProposal)
             }
         }
@@ -77,11 +79,11 @@ class SocialBehavior {
                 continue
             }
             
-            if let acceptedTeam = creature.AcceptInvite(to: invitationTeams) {
+            if let acceptedTeam = creature.acceptInvite(to: invitationTeams) {
                 for (index, team) in gatheringTeams.enumerated() {
                     if team.TeamProposal.TeamLeaderID == acceptedTeam.TeamProposal.TeamLeaderID {
                         gatheringTeams[index].Team.OtherMemberIDs.append(memberID)
-                        gatheringTeams[index].Action.memberActions[memberID] = creature.WorkEffort(to:team)
+                        gatheringTeams[index].Action.memberActions[memberID] = creature.workEffort(to:team)
                     }
                 }
                 _ = creaturesForTeamUp.removeFirstCreatureBy(uniqueID: memberID)
@@ -147,7 +149,7 @@ class SocialBehavior {
 //        statistic["TotalReward"] = statistic.getStatstic(for: "TotalReward") + Double(cooperation.Reward?.totalRewards ?? 0)
         if let leaderWorkingEffort = cooperation.Action.memberActions[cooperation.Team.TeamLeaderID] {
             if let workingCreature = creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID) {
-                cooperation.Action.workingCosts[cooperation.Team.TeamLeaderID] = workingCreature.WorkCost(leaderWorkingEffort)
+                cooperation.Action.workingCosts[cooperation.Team.TeamLeaderID] = workingCreature.workCost(leaderWorkingEffort)
                 workingCreature.writeStory("Work with "+String(cooperation.Team.OtherMemberIDs.count)+" other members")
             }
         }else{
@@ -159,8 +161,7 @@ class SocialBehavior {
                 continue
             }
             if let workingCreature = creatures.findCreatureBy(uniqueID: memberID) {
-                cooperation.Action.workingCosts[memberID] = workingCreature.WorkCost(workingEffort)
-                
+                cooperation.Action.workingCosts[memberID] = workingCreature.workCost(workingEffort)
                 workingCreature.writeStory("Work with "+String(cooperation.Team.OtherMemberIDs.count)+" other members")
             }
         }
@@ -181,7 +182,7 @@ class SocialBehavior {
     
     func SingleWandering(_ failedCreatures:inout FailedTeamUp){
         for creatureID in failedCreatures.SingleCreatures {
-            creatures.findCreatureBy(uniqueID: creatureID)?.WasteTime()
+            creatures.findCreatureBy(uniqueID: creatureID)?.wasteTime()
         }
 
     }
@@ -195,11 +196,11 @@ class SocialBehavior {
             return
         }
         
-        teamLeader.AssignReward(to: &cooperation)
+        teamLeader.assignReward(to: &cooperation)
         
         if let rewardAssignment = cooperation.Reward {
             for (memberID, rewardResource) in rewardAssignment.MemberRewards {
-                creatures.findCreatureBy(uniqueID: memberID)?.GetReward(rewardResource, as: cooperation)
+                creatures.findCreatureBy(uniqueID: memberID)?.getReward(rewardResource, as: cooperation)
             }
         }
     }
@@ -208,7 +209,7 @@ class SocialBehavior {
         var newBornCreatures:[Creature] = []
         
         creatures.forEach { (creature) in
-            if let newBornCreature = creature.SelfReproduction(){
+            if let newBornCreature = creature.selfReproduction(){
                 newBornCreatures.append(newBornCreature)
             }
         }

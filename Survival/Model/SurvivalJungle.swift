@@ -44,9 +44,14 @@ class SurvivalJungle {
     func CreaturesSurvival() -> [Creature]{
         var FailedCreature:[Creature] = []
         allCreatures = allCreatures.filter({ (ChallengingCreature:Creature) -> Bool in
-            if ChallengingCreature.surviveChallenge() {
+            let tuple = ChallengingCreature.surviveChallenge()
+            let surviveSucceed = tuple.0
+            let failReason = tuple.1
+            if surviveSucceed {
                 return true
             }
+            //Failed challenge, creature die
+            ChallengingCreature.die(by: failReason, with: &allCreatures)
             FailedCreature.append(ChallengingCreature)
             return false
         })
@@ -61,16 +66,23 @@ class SurvivalJungle {
     }
     
     func Run(_ seasonNumber:Int) -> [SurvivalStatistic]{
+        var previousTimestamp = Date().timeIntervalSince1970
         for _ in currentSeason...currentSeason+seasonNumber-1{
+            let currentTimestamp = Date().timeIntervalSince1970
+            let costTime = currentTimestamp - previousTimestamp
+            previousTimestamp = currentTimestamp
+            print ("Cost:"+String(costTime))
             currentSeason += 1;
             var seasonResource = jungleTotalResource
             let social = SocialBehavior(with: allCreatures, seasonResource:&seasonResource)
             social.SeasonWork()
 
             let newBornCreatures = social.CreaturesReproduction()
+//            social.statistic["New Born"] = Double(newBornCreatures.count)
             allCreatures.append(contentsOf: newBornCreatures)
             
             let seasonDiedCreature = self.CreaturesSurvival()
+//            social.statistic["Died"] = Double(seasonDiedCreature.count)
             diedCreatures.append(contentsOf: seasonDiedCreature)
             
             self.CreaturesAging()
@@ -83,7 +95,9 @@ class SurvivalJungle {
             social.statistic["Method:Adapter"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Adapter").count)
             social.statistic["Method:Follower"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Follower").count)
             social.statistic["Method:Leader"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Leader").count)
-            social.statistic["CreatureCount"] = Double(allCreatures.findAllCreatureMethodology().count)
+            social.statistic["Method:HeritageAll"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"HeritageAll").count)
+            social.statistic["Method:HeritageFirstSon"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"HeritageFirstSon").count)
+//            social.statistic["CreatureCount"] = Double(allCreatures.findAllCreatureMethodology().count)
 
             statistic.append(social.statistic)
             print("season-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == false && $0.key.hasPrefix("Method:") == false})")

@@ -35,12 +35,10 @@ enum CoWorkerChooseDecision: UInt32 {
 }
 
 struct Methodology:Loopable{
-    var TeamLead:TeamLeadMethodology = TeamLeadMethodology()
-    var TeamFollow:TeamFollowMethodology = TeamFollowMethodology()
-    var Reproduction:ReproductionMethodology = ReproductionMethodology()
-    var Community:CommunityMethodology = CommunityMethodology()
-    var Talk:TalkMethodology = TalkMethodology()
-    var Listen:ListenMethodology = ListenMethodology()
+    var teamLead:TeamLeadMethodology = TeamLeadMethodology()
+    var teamFollow:TeamFollowMethodology = TeamFollowMethodology()
+    var reproduction:ReproductionMethodology = ReproductionMethodology()
+    var heritage:HeritageMethodology = HeritageMethodology()
     
     func descriptor() ->String {
         let teamLeadDescriptor = descriptorOfTeamLead()
@@ -54,16 +52,17 @@ struct Methodology:Loopable{
             totalDescriptor = teamLeadDescriptor
         }
         totalDescriptor = totalDescriptor + "-" + descriptorOfReproduction()
+        totalDescriptor = totalDescriptor + "-" + descriptorOfHeritage()
         return totalDescriptor
     }
     
     func detailDescriptor() ->String {
-        return descriptorOfTeamLead()+"-"+descriptorOfTeamFollow()+"-"+descriptorOfReproduction()
+        return descriptorOfTeamLead()+"-"+descriptorOfTeamFollow()+"-"+descriptorOfReproduction()+"-"+descriptorOfHeritage()
     }
     
     func descriptorOfTeamLead() -> String {
         var descriptor:String = ""
-        switch String(describing: type(of: TeamLead)) {
+        switch String(describing: type(of: teamLead)) {
         case String(describing: TeamLeadMethodology.self):
             descriptor = descriptor + ""
             break
@@ -105,7 +104,7 @@ struct Methodology:Loopable{
     
     func descriptorOfTeamFollow() -> String {
         var descriptor:String = ""
-        switch String(describing: type(of: TeamFollow)) {
+        switch String(describing: type(of: teamFollow)) {
         case String(describing: TeamFollowMethodology.self):
             descriptor = descriptor + ""
             break
@@ -138,7 +137,7 @@ struct Methodology:Loopable{
     
     func descriptorOfReproduction() -> String {
         var descriptor:String = ""
-        switch String(describing: type(of: Reproduction)) {
+        switch String(describing: type(of: reproduction)) {
         case String(describing: ReproductionMethodology.self):
             descriptor = descriptor + "0"
             break
@@ -154,13 +153,29 @@ struct Methodology:Loopable{
         return descriptor
     }
 
+    func descriptorOfHeritage() -> String {
+        var descriptor:String = ""
+        switch String(describing: type(of: heritage)) {
+        case String(describing: HeritageMethodology.self):
+            descriptor = descriptor + "0"
+            break
+        case String(describing: HeritageMethodology_Normal.self):
+            descriptor = descriptor + "HeritageAll"
+            break
+        case String(describing: HeritageMethodology_OnlyFirstSon.self):
+            descriptor = descriptor + "HeritageFirstSon"
+            break
+        default:
+            descriptor = descriptor + ".."
+        }
+        return descriptor
+    }
+
     static func randomMethodGenerator() -> Methodology {
-        return Methodology(TeamLead: TeamLeadMethodology.teamLeadRandomMethodGenerator(),
-                           TeamFollow: TeamFollowMethodology.teamFollowRandomMethodGenerator(),
-                           Reproduction: ReproductionMethodology.reproductionRandomMethodGenerator(),
-                           Community: CommunityMethodology(),
-                           Talk: TalkMethodology(),
-                           Listen: ListenMethodology())
+        return Methodology(teamLead: TeamLeadMethodology.teamLeadRandomMethodGenerator(),
+                           teamFollow: TeamFollowMethodology.teamFollowRandomMethodGenerator(),
+                           reproduction: ReproductionMethodology.reproductionRandomMethodGenerator(),
+                           heritage:HeritageMethodology.heritageRandomMethodGenerator())
     }
 }
 

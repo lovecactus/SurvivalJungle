@@ -14,6 +14,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+//        //test
+//        var allCreatures:[Creature] = []
+//        var allCreatureDict:[CreatureUniqueID:Creature] = [:]
+//        for index in 1...10000 {
+//            let newBorn = GenericSpecies.init(familyName: "Generic",
+//                                              givenName: String(index),
+//                                              methodology: Methodology.randomMethodGenerator(),
+//                                              age: Int(arc4random_uniform(50)))
+//            allCreatures.append(newBorn)
+//            allCreatureDict["Tester Creature"+String(index)] = newBorn
+//        }
+//
+//
+//        for _ in 1...Int.max {
+//            let creatureIndex = "Tester Creature"+String(arc4random_uniform(UInt32(allCreatures.count)))
+//            let _ = allCreatures.findCreatureBy(uniqueID: creatureIndex)
+//            let _ = allCreatureDict[creatureIndex]
+//        }
         return true
     }
 
@@ -37,7 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let statisticsVC = LineChartStaticsViewController(Statistic: [])
         self.window?.rootViewController = statisticsVC
         DispatchQueue.global(qos: .default).async {
-            let jungle = SurvivalJungle(totalResource: 2000, averageCreatureNumber: 200)
+            let jungle = SurvivalJungle(totalResource: 10000, averageCreatureNumber: 500)
             for _ in 1...INT_MAX {
                 let survivalStatic = jungle.Run(10)
                 DispatchQueue.main.async {

@@ -12,7 +12,7 @@ import Foundation
 class TeamFollowMethodology {
     public static func teamFollowRandomMethodGenerator() -> TeamFollowMethodology {
         let method:TeamFollowMethodology
-        switch Int(arc4random_uniform(3)) {
+        switch Int(arc4random_uniform(6)) {
         case 0:
             method = TeamFollowMethodology_Random()
             break
@@ -25,15 +25,15 @@ class TeamFollowMethodology {
 //        case 3:
 //            method = TeamFollowMethodology_FairFollower()
 //            break
-//        case 4:
-//            method = TeamFollowMethodology_ConservativeRewardFollower_Lazy()
-//            break
-//        case 5:
-//            method = TeamFollowMethodology_SelfishRewardFollower_Lazy()
-//            break
-//        case 6:
-//            method = TeamFollowMethodology_FairFollower_Lazy()
-//            break
+        case 3:
+            method = TeamFollowMethodology_ConservativeRewardFollower_Lazy()
+            break
+        case 4:
+            method = TeamFollowMethodology_SelfishRewardFollower_Lazy()
+            break
+        case 5:
+            method = TeamFollowMethodology_FairFollower_Lazy()
+            break
         default:
             method = TeamFollowMethodology()
         }

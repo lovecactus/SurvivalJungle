@@ -61,13 +61,19 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         ChartView.backgroundColor = .white
         
         let leftAxis = ChartView.leftAxis
-        leftAxis.axisMaximum = 800.0
+        leftAxis.axisMaximum = 1000.0
         leftAxis.axisMinimum = 0.0
         leftAxis.gridLineDashLengths = [5.0, 5.0]
         leftAxis.drawZeroLineEnabled = false;
         leftAxis.drawLimitLinesBehindDataEnabled = true;
         
-        ChartView.rightAxis.enabled = false;
+        let rightAxis = ChartView.rightAxis
+        rightAxis.axisMaximum = 200.0
+        rightAxis.axisMinimum = 0.0
+        rightAxis.gridLineDashLengths = [5.0, 5.0]
+        rightAxis.drawZeroLineEnabled = false;
+        rightAxis.drawLimitLinesBehindDataEnabled = true;
+//        ChartView.rightAxis.enabled = false;
         ChartView.legend.form = .line
         
     }
