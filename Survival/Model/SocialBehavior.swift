@@ -15,11 +15,11 @@ typealias WorkingCostResource = SurvivalResource
 let resourceLimitRate:RewardResource = 0.8
 
 class SocialBehavior {
-    var creatures:[Creature]
+    var creatures:CreatureGroup
     var seasonResource:RewardResource
     var statistic:SurvivalStatistic = SurvivalStatistic()
 
-    init(with creatures:[Creature], seasonResource:inout RewardResource) {
+    init(with creatures:inout CreatureGroup, seasonResource:inout RewardResource) {
         self.creatures = creatures
         self.seasonResource = seasonResource
     }
@@ -47,7 +47,7 @@ class SocialBehavior {
 
     func AssambleTeams() -> [TeamWorkCooperation]{
         var teamProposals:[TeamWorkCooperation] = []
-        for creature in creatures {
+        for (_, creature) in creatures {
             if let teamProposal = creature.teamPropose(from: &creatures) {
                 teamProposals.append(teamProposal)
             }
@@ -70,7 +70,7 @@ class SocialBehavior {
                 invitationsForThisMemberID.append(teamProposal)
                 suspendingInvitations[memberID] = invitationsForThisMemberID
             }
-            _ = creaturesForTeamUp.removeFirstCreatureBy(uniqueID: teamProposal.TeamProposal.TeamLeaderID)
+            creaturesForTeamUp.removeValue(forKey: teamProposal.TeamProposal.TeamLeaderID)
             gatheringTeams.append(teamProposal)
         }
         
@@ -86,7 +86,7 @@ class SocialBehavior {
                         gatheringTeams[index].Action.memberActions[memberID] = creature.workEffort(to:team)
                     }
                 }
-                _ = creaturesForTeamUp.removeFirstCreatureBy(uniqueID: memberID)
+                creaturesForTeamUp.removeValue(forKey: memberID)
             }else{
 //                print ("leading another team")
             }
@@ -94,7 +94,7 @@ class SocialBehavior {
 
         var failedTeamUpCreatures:[CreatureUniqueID] = []
         let restCreatureForTeamUp = creaturesForTeamUp
-        restCreatureForTeamUp.forEach { (creature) in
+        restCreatureForTeamUp.forEach { (_, creature) in
             failedTeamUpCreatures.append(creature.identifier.uniqueID)
         }
         let failedTeamUp = FailedTeamUp(SingleCreatures: failedTeamUpCreatures)
@@ -208,7 +208,7 @@ class SocialBehavior {
     func CreaturesReproduction() -> [Creature]{
         var newBornCreatures:[Creature] = []
         
-        creatures.forEach { (creature) in
+        creatures.forEach { (_, creature) in
             if let newBornCreature = creature.selfReproduction(){
                 newBornCreatures.append(newBornCreature)
             }

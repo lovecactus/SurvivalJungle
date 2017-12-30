@@ -30,7 +30,10 @@ class TeamLeadMethodology{
         case 5:
             method = TeamLeadMethodology_BetterSelfishLeaderShip_Adapter()
             break
-        case 6...13: //More than half rate for follower
+        case 6:
+            method = TeamLeadMethodology_LeaderShip_ValueDigger()
+            break
+        case 7...14: //More than half rate for follower
             method = TeamLeadMethodology_OnlyFollow()
             break
 //        case 7:
@@ -48,7 +51,7 @@ class TeamLeadMethodology{
         return method
     }
 
-    func teamPropose(from creature:Creature, on creatures:inout [Creature]) -> TeamWorkCooperation? {
+    func teamPropose(from creature:Creature, on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         return nil
     }
     
@@ -62,7 +65,7 @@ class TeamLeadMethodology_OnlyFollow:TeamLeadMethodology{
 
 class TeamLeadMethodology_LeaderShip:TeamLeadMethodology{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         var teamMembers:[CreatureUniqueID] = []
         //        let teamWorkMemories = creature.memory.thinkOfTeamWorkMemory()
         //        let allHistoryMembers:[CreatureUniqueID] = Array(Set(teamWorkMemories.map{$0.teamWorkCooperation.Team.OtherMemberIDs}.flatMap {$0}))
@@ -75,11 +78,9 @@ class TeamLeadMethodology_LeaderShip:TeamLeadMethodology{
         }
         
         if teamMembers.count < maxLeadingMembers{
-            if let otherMemberCandidates = creatures.randomPick(some: maxLeadingMembers-teamMembers.count) {
-                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
-                    return creature.identifier.uniqueID
-                }))
-            }
+            teamMembers.append(contentsOf: creatures.randomPick(some: maxLeadingMembers-teamMembers.count).flatMap({ (creature) -> String? in
+                return creature.identifier.uniqueID
+            }))
         }
         
         let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
@@ -106,7 +107,7 @@ class TeamLeadMethodology_LeaderShip:TeamLeadMethodology{
 
 class TeamLeadMethodology_LeaderShip_NoLazy:TeamLeadMethodology_LeaderShip{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         var teamMembers:[CreatureUniqueID] = []
         if let lastCooperation = creature.memory.thinkOfLastTeamWorkMemory()?.teamWorkCooperation {
             let otherOldMemberIDs = lastCooperation.Team.OtherMemberIDs.filter({ (memberID) -> Bool in
@@ -119,11 +120,9 @@ class TeamLeadMethodology_LeaderShip_NoLazy:TeamLeadMethodology_LeaderShip{
         }
         
         if teamMembers.count < maxLeadingMembers{
-            if let otherMemberCandidates = creatures.randomPick(some: maxLeadingMembers-teamMembers.count) {
-                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
-                    return creature.identifier.uniqueID
-                }))
-            }
+            teamMembers.append(contentsOf: creatures.randomPick(some: maxLeadingMembers-teamMembers.count).flatMap({ (creature) -> String? in
+                return creature.identifier.uniqueID
+            }))
         }
         
         let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
@@ -138,7 +137,7 @@ class TeamLeadMethodology_LeaderShip_NoLazy:TeamLeadMethodology_LeaderShip{
 
 class TeamLeadMethodology_LeaderShip_ValueDigger:TeamLeadMethodology_LeaderShip{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         var teamMembers:[CreatureUniqueID] = []
         if let lastCooperation = creature.memory.thinkOfLastTeamWorkMemory()?.teamWorkCooperation {
             let otherOldMemberIDs = lastCooperation.Team.OtherMemberIDs.filter({ (memberID) -> Bool in
@@ -151,11 +150,9 @@ class TeamLeadMethodology_LeaderShip_ValueDigger:TeamLeadMethodology_LeaderShip{
         }
         
         if teamMembers.count < maxLeadingMembers{
-            if let otherMemberCandidates = creatures.randomPick(some: maxLeadingMembers-teamMembers.count) {
-                teamMembers.append(contentsOf: otherMemberCandidates.flatMap({ (creature) -> String? in
-                    return creature.identifier.uniqueID
-                }))
-            }
+            teamMembers.append(contentsOf: creatures.randomPick(some: maxLeadingMembers-teamMembers.count).flatMap({ (creature) -> String? in
+                return creature.identifier.uniqueID
+            }))
         }
         
         let teamProposal = CooperationTeam(TeamLeaderID: creature.identifier.uniqueID, OtherMemberIDs: teamMembers)
@@ -223,7 +220,7 @@ class TeamLeadMethodology_BetterSelfishLeaderShip:TeamLeadMethodology_LeaderShip
 
 class TeamLeadMethodology_BetterSelfishLeaderShip_Adapter:TeamLeadMethodology_BetterSelfishLeaderShip, TeamLeadAdapterMethodology{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         if self.AdapterCurrentSituationAsLeader(as: creature) {
             return super.teamPropose(from: creature, on: &creatures)
         }
@@ -269,7 +266,7 @@ extension TeamLeadAdapterMethodology where Self: TeamLeadMethodology{
 
 class TeamLeadMethodology_SelfishLeaderShip_Adapter:TeamLeadMethodology_SelfishLeaderShip, TeamLeadAdapterMethodology{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         if self.AdapterCurrentSituationAsLeader(as: creature) {
             return super.teamPropose(from: creature, on: &creatures)
         }
@@ -280,7 +277,7 @@ class TeamLeadMethodology_SelfishLeaderShip_Adapter:TeamLeadMethodology_SelfishL
 
 class TeamLeadMethodology_FairLeaderShip_Adapter:TeamLeadMethodology_FairLeaderShip, TeamLeadAdapterMethodology{
     override func teamPropose(from creature:Creature,
-                              on creatures:inout [Creature]) -> TeamWorkCooperation? {
+                              on creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         if self.AdapterCurrentSituationAsLeader(as: creature) {
             return super.teamPropose(from: creature, on: &creatures)
         }

@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 //        //test
 //        var allCreatures:[Creature] = []
-//        var allCreatureDict:[CreatureUniqueID:Creature] = [:]
+//        var allCreatureDict:CreatureGroup = [:]
 //        for index in 1...10000 {
 //            let newBorn = GenericSpecies.init(familyName: "Generic",
 //                                              givenName: String(index),
@@ -55,7 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let statisticsVC = LineChartStaticsViewController(Statistic: [])
         self.window?.rootViewController = statisticsVC
         DispatchQueue.global(qos: .default).async {
-            let jungle = SurvivalJungle(totalResource: 10000, averageCreatureNumber: 500)
+            let jungle = SurvivalJungle(totalResource: 4000, averageCreatureNumber: 500)
             for _ in 1...INT_MAX {
                 let survivalStatic = jungle.Run(10)
                 DispatchQueue.main.async {

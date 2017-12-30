@@ -18,9 +18,9 @@ protocol ResourceTransferProtocol {
 }
 
 protocol WorkProtocol {
-    func TeamPropose(from creatures:inout [Creature]) -> TeamWorkCooperation?
-    func AcceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?
-    func WorkValue() -> EffortValue
+    func teamPropose(from creatures:inout CreatureGroup) -> TeamWorkCooperation?
+    func acceptInvite(to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?
+    func workValue() -> EffortValue
 }
 
 protocol CommunicationProtocol {
@@ -40,7 +40,7 @@ struct Identifer {
     }
 }
 
-class Creature : ReproductionProtocol, CommunicationProtocol, ResourceTransferProtocol{
+class Creature : ReproductionProtocol, CommunicationProtocol, ResourceTransferProtocol, WorkProtocol{
     public var surviveResource:SurvivalResource = 0
     public let identifier:Identifer
     var age:Int = 0
@@ -70,7 +70,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol, ResourceTransferPr
         memory.growMature(at: age)
     }
     
-    func die(by reason:String, with creatures:inout [Creature]){
+    func die(by reason:String, with creatures:inout CreatureGroup){
         self.method.heritage.heritage(of: self, to: &creatures)
         writeStory("Die by "+reason)
     }
@@ -111,7 +111,7 @@ class Creature : ReproductionProtocol, CommunicationProtocol, ResourceTransferPr
         return (true, "")
     }
     
-    func teamPropose(from creatures:inout [Creature]) -> TeamWorkCooperation? {
+    func teamPropose(from creatures:inout CreatureGroup) -> TeamWorkCooperation? {
         let TeamProposal = method.teamLead.teamPropose(from: self, on: &creatures)
         if nil != TeamProposal {
             writeStory("Try leading a team, with cost:"+String(teamStartUpCost))

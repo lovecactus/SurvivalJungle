@@ -24,7 +24,7 @@ class HeritageMethodology {
         return method
     }
 
-    public func heritage(of creature:Creature, to creatures:inout [Creature]) {
+    public func heritage(of creature:Creature, to creatures:inout CreatureGroup) {
         let sonIDs = creature.memory.thinkOfSons()
         guard sonIDs.count > 0 && creature.surviveResource > 0 else {
             return
@@ -42,7 +42,7 @@ class HeritageMethodology_Normal:HeritageMethodology {
 }
 
 class HeritageMethodology_OnlyFirstSon:HeritageMethodology {
-    override public func heritage(of creature:Creature, to creatures:inout [Creature]) {
+    override public func heritage(of creature:Creature, to creatures:inout CreatureGroup) {
         let sonIDs = creature.memory.thinkOfSons()
         guard let firstSonID = sonIDs.first, creature.surviveResource > 0 else {
             return

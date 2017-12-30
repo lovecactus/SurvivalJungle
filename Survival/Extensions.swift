@@ -50,6 +50,65 @@ extension Array {
     }
 }
 
+extension Dictionary where Value:Creature {
+    func randomPick() -> Value? {
+        guard !isEmpty else {
+            return nil
+        }
+        let index = Int(arc4random_uniform(UInt32(self.count)))
+        return self[Array(self.keys)[index]]
+    }
+    
+    func randomPick(some PickNumber:Int) -> [Value] {
+        guard !isEmpty, PickNumber > 0 else {
+            return []
+        }
+        
+        let randomPickNumber = (PickNumber<count) ? PickNumber : count
+        return Array(self.keys).shuffled()[0..<randomPickNumber].flatMap({self[$0]})
+    }
+    
+//    func randomPick(some PickNumber:Int) -> [Value] {
+//        guard !isEmpty, PickNumber > 0 else {
+//            return []
+//        }
+//
+//        let randomPickNumber = (PickNumber<count) ? PickNumber : count
+//        var randomKeys:[Key] = []
+//        var randomIndexs:[Int] = Array(0..<count)
+//        let allKeys = Array(self.keys)
+//        for _ in 1...randomPickNumber {
+//            let randomIndex = Int(arc4random_uniform(UInt32(randomIndexs.count)))
+//            let randomKeyIndex = randomIndexs[randomIndex]
+//            randomKeys.append(allKeys[randomKeyIndex])
+//            randomIndexs.remove(at: randomIndex)
+//        }
+//
+//        return randomKeys.flatMap({self[$0]})
+//
+//    }
+//
+//    func randomPick(some PickNumber:Int) -> [Value] {
+//        guard !isEmpty, PickNumber > 0 else {
+//            return []
+//        }
+//
+//        let randomPickNumber = (PickNumber<count) ? PickNumber : count
+//        var randomKeyIndex = Int(arc4random_uniform(UInt32(count)))
+//        let randomIncreaseRange = count/randomPickNumber
+//        var randomKeys:[Key] = []
+//        for _ in 1...randomPickNumber {
+//            let keyIndex = self.keys[index(startIndex, offsetBy: randomKeyIndex)]
+//            randomKeys.append(keyIndex)
+//
+//            randomKeyIndex += Int(arc4random_uniform(UInt32(randomIncreaseRange-1)))+1
+//            randomKeyIndex = (randomKeyIndex >= count) ? randomKeyIndex-count : randomKeyIndex
+//        }
+//        return randomKeys.flatMap({self[$0]})
+//
+//    }
+}
+
 extension Sequence {
     /// Returns an array with the contents of this sequence, shuffled.
     func shuffled() -> [Iterator.Element] {
