@@ -41,7 +41,7 @@ class SocialBehavior {
             return result + cooperation.Team.OtherMemberIDs.count
             }))
         statistic["Single Wanderer"] = Double(failedCreatures.SingleCreatures.count)
-//        statistic["Total Income"] = cooperations.map({$0.Reward?.MemberRewards}).flatMap({$0}).flatMap({$0}).map({(key: CreatureUniqueID, value: RewardResource) -> RewardResource in return value}).reduce(0, +)
+        statistic["Total Income"] = cooperations.map({$0.Reward?.memberRewards}).flatMap({$0}).flatMap({$0}).map({(key: CreatureUniqueID, value: RewardResource) -> RewardResource in return value}).reduce(0, +)
         statistic["Total Cost"] = cooperations.map({$0.Action.workingCosts}).flatMap({$0}).flatMap({ (key:CreatureUniqueID, value: WorkingCostResource) -> WorkingCostResource? in return value}).reduce(0, +)
     }
 
@@ -102,8 +102,8 @@ class SocialBehavior {
     }
     
     func Work(as cooperation:inout TeamWorkCooperation){
-        let totalTeamMember = cooperation.Action.WorkMemberCount()
-        let effort = cooperation.Action.TotalEffort()
+        let totalTeamMember = cooperation.Action.workMemberCount()
+        let effort = cooperation.Action.totalEffort()
         let bounsReward:RewardResource
         switch totalTeamMember {
         case 0...1:
@@ -127,10 +127,10 @@ class SocialBehavior {
         let maxAvailableReward = seasonResource*resourceLimitRate
         
         if (totalReward <= maxAvailableReward){
-            cooperation.Goal.Succeed = true
+            cooperation.Goal.succeed = true
         }else{
             //Not sufficent resource
-            cooperation.Goal.Succeed = false
+            cooperation.Goal.succeed = false
             totalReward = maxAvailableReward
         }
 
@@ -145,7 +145,7 @@ class SocialBehavior {
             totalReward = 0
         }
         
-        cooperation.Reward = CooperationReward(TotalRewards: totalReward, MemberRewards: [:])
+        cooperation.Reward = CooperationReward(totalRewards: totalReward, leaderExploitation: 0, memberRewards: [:])
 //        statistic["TotalReward"] = statistic.getStatstic(for: "TotalReward") + Double(cooperation.Reward?.totalRewards ?? 0)
         if let leaderWorkingEffort = cooperation.Action.memberActions[cooperation.Team.TeamLeaderID] {
             if let workingCreature = creatures.findCreatureBy(uniqueID: cooperation.Team.TeamLeaderID) {
@@ -169,7 +169,7 @@ class SocialBehavior {
     
     func TeamCompetes(_ cooperations:inout [TeamWorkCooperation]){
         cooperations.shuffle()
-        cooperations.sort { $0.Action.TotalEffort() > $1.Action.TotalEffort() }
+        cooperations.sort { $0.Action.totalEffort() > $1.Action.totalEffort() }
 //        statistic["Avg. Competes"] = cooperations.map({$0.Action.TotalEffort()}).average
     }
 
@@ -199,7 +199,7 @@ class SocialBehavior {
         teamLeader.assignReward(to: &cooperation)
         
         if let rewardAssignment = cooperation.Reward {
-            for (memberID, rewardResource) in rewardAssignment.MemberRewards {
+            for (memberID, rewardResource) in rewardAssignment.memberRewards {
                 creatures.findCreatureBy(uniqueID: memberID)?.getReward(rewardResource, as: cooperation)
             }
         }
@@ -208,12 +208,46 @@ class SocialBehavior {
     func CreaturesReproduction() -> [Creature]{
         var newBornCreatures:[Creature] = []
         
-        creatures.forEach { (_, creature) in
-            if let newBornCreature = creature.selfReproduction(){
-                newBornCreatures.append(newBornCreature)
+        creatures.filter{$0.value.method.reproduction.reproductionType.isSelfReproduction()}.forEach{(_, creature) in
+            if creature.method.reproduction.reproductionType.isSelfReproduction(){
+                if creature.method.reproduction.matingMature.readyToReproduction(as: creature) {
+                    newBornCreatures.append(creature.selfReproduction())
+                }
             }
         }
 
+        var courtships:[CreatureUniqueID:[Creature]] = [:]
+        let maturedMales = creatures.filter{$0.value.method.reproduction.reproductionType.isSelfReproduction() == false}
+            .filter{$0.value.method.reproduction.gender.gender() == .Male
+                && $0.value.method.reproduction.matingMature.readyToReproduction(as: $0.value)}
+            .map{$0.value}
+
+        var maturedFemales = creatures.filter{$0.value.method.reproduction.reproductionType.isSelfReproduction() == false}
+            .filter{$0.value.method.reproduction.gender.gender() == .Female
+                && $0.value.method.reproduction.matingMature.readyToReproduction(as: $0.value)}
+            .map{$0.value}
+        
+        maturedMales.forEach { (creature) in
+            guard let wantingCreatureID = creature.findAnIdealLover(in: &maturedFemales)?.identifier.uniqueID else {return}
+            
+            var courtshipOfThisCreature:[Creature]
+            if let existingCourtships = courtships[wantingCreatureID] {
+                courtshipOfThisCreature = existingCourtships
+            }else{
+                courtshipOfThisCreature = []
+            }
+            courtshipOfThisCreature.append(creature)
+            courtships[wantingCreatureID] = courtshipOfThisCreature
+        }
+
+        courtships.forEach { (femaleID, maleLovers) in
+            guard let femaleCreature = creatures[femaleID] else {return}
+            guard femaleCreature.method.reproduction.matingMature.readyToReproduction(as: femaleCreature) else {return}
+            if let chosenOne = femaleCreature.pickAnIdealLover(from: maleLovers) {
+                newBornCreatures.append(femaleCreature.matingReproduction(with: chosenOne))
+            }
+        }
+    
         return newBornCreatures
     }
 

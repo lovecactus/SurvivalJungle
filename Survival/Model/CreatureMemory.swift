@@ -81,7 +81,7 @@ class CreatureMemory{
     }
 
     public func releaseReproductionDesire() {
-        self.longTermMemory.reproductionDesire -= reproductionDesireThreshold
+        self.longTermMemory.reproductionDesire = 0
     }
     
     public func reproductionDesire() -> Double {

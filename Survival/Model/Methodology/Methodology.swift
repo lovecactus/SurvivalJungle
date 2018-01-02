@@ -10,6 +10,7 @@ import Foundation
 
 
 let maxLeadingMembers = 20
+let teamWorkConsistReword:RewardResource = 0
 let teamWorkConservativeReword:RewardResource = 4
 let teamWorkIdealReword:RewardResource = 8
 
@@ -41,141 +42,31 @@ struct Methodology:Loopable{
     var heritage:HeritageMethodology = HeritageMethodology()
     
     func descriptor() ->String {
-        let teamLeadDescriptor = descriptorOfTeamLead()
-        let teamFollowDescriptor = descriptorOfTeamFollow()
+        let teamLeadDescriptor = teamLead.descriptor()
+        let teamFollowDescriptor = teamFollow.descriptor()
         var totalDescriptor = ""
-        if teamLeadDescriptor == "Follower" {
-            totalDescriptor = teamFollowDescriptor
-        }else if teamLeadDescriptor.hasSuffix("Adapter") {
-            totalDescriptor = teamLeadDescriptor+"-"+teamFollowDescriptor
+        if teamLead.teamLeading.descriptor() == "BornLeader" {
+            totalDescriptor = teamLeadDescriptor+"-"+teamFollow.teamFollowAttitude.descriptor()
+        }else if teamLead.teamLeading.descriptor() == "BornFollower" {
+            totalDescriptor = teamLead.teamLeading.descriptor()+"-"+teamFollow.teamFollowAttitude.descriptor()+"-"+teamFollow.teamFollowChoose.descriptor()
         }else {
-            totalDescriptor = teamLeadDescriptor
+            totalDescriptor = teamLeadDescriptor+"-"+teamFollowDescriptor
         }
-        totalDescriptor = totalDescriptor + "-" + descriptorOfReproduction()
-        totalDescriptor = totalDescriptor + "-" + descriptorOfHeritage()
+
+        totalDescriptor = totalDescriptor + "-" + reproduction.descriptor()
+        totalDescriptor = totalDescriptor + "-" + heritage.descriptor()
         return totalDescriptor
     }
     
     func detailDescriptor() ->String {
-        return descriptorOfTeamLead()+"-"+descriptorOfTeamFollow()+"-"+descriptorOfReproduction()+"-"+descriptorOfHeritage()
-    }
-    
-    func descriptorOfTeamLead() -> String {
-        var descriptor:String = ""
-        switch String(describing: type(of: teamLead)) {
-        case String(describing: TeamLeadMethodology.self):
-            descriptor = descriptor + ""
-            break
-        case String(describing: TeamLeadMethodology_LeaderShip.self):
-            descriptor = descriptor + "Leader"
-            break
-        case String(describing: TeamLeadMethodology_OnlyFollow.self):
-            descriptor = descriptor + "Follower"
-            break
-        case String(describing: TeamLeadMethodology_FairLeaderShip.self):
-            descriptor = descriptor + "FairLeader"
-            break
-        case String(describing: TeamLeadMethodology_SelfishLeaderShip.self):
-            descriptor = descriptor + "SelfLeader"
-            break
-        case String(describing: TeamLeadMethodology_SelfishLeader_NoLazy.self):
-            descriptor = descriptor + "SelfLeaderNoLazy"
-            break
-        case String(describing: TeamLeadMethodology_FairLeaderShip_NoLazy.self):
-            descriptor = descriptor + "FairLeaderNoLazy"
-            break
-        case String(describing: TeamLeadMethodology_FairLeaderShip_Adapter.self):
-            descriptor = descriptor + "FairAdapter"
-            break
-        case String(describing: TeamLeadMethodology_BetterSelfishLeaderShip.self):
-            descriptor = descriptor + "BetterSelfLeader"
-            break
-        case String(describing: TeamLeadMethodology_SelfishLeaderShip_Adapter.self):
-            descriptor = descriptor + "SelfAdapter"
-            break
-        case String(describing: TeamLeadMethodology_BetterSelfishLeaderShip_Adapter.self):
-            descriptor = descriptor + "BetterSelfAdapter"
-            break
-        default:
-            descriptor = descriptor + ".."
-        }
-        return descriptor
-    }
-    
-    func descriptorOfTeamFollow() -> String {
-        var descriptor:String = ""
-        switch String(describing: type(of: teamFollow)) {
-        case String(describing: TeamFollowMethodology.self):
-            descriptor = descriptor + ""
-            break
-        case String(describing: TeamFollowMethodology_Random.self):
-            descriptor = descriptor + "FollowRandom"
-            break
-        case String(describing: TeamFollowMethodology_FairFollower.self):
-            descriptor = descriptor + "FollowFair"
-            break
-        case String(describing: TeamFollowMethodology_FairFollower_Lazy.self):
-            descriptor = descriptor + "FollowFairLazy"
-            break
-        case String(describing: TeamFollowMethodology_SelfishRewardFollower.self):
-            descriptor = descriptor + "FollowReward"
-            break
-        case String(describing: TeamFollowMethodology_ConservativeRewardFollower.self):
-            descriptor = descriptor + "FollowConservative"
-            break
-        case String(describing: TeamFollowMethodology_SelfishRewardFollower_Lazy.self):
-            descriptor = descriptor + "FollowRewardLazy"
-            break
-        case String(describing: TeamFollowMethodology_ConservativeRewardFollower_Lazy.self):
-            descriptor = descriptor + "FollowConservativeLazy"
-            break
-        default:
-            descriptor = descriptor + ".."
-        }
-        return descriptor
-    }
-    
-    func descriptorOfReproduction() -> String {
-        var descriptor:String = ""
-        switch String(describing: type(of: reproduction)) {
-        case String(describing: ReproductionMethodology.self):
-            descriptor = descriptor + "0"
-            break
-        case String(describing: ReproductionMethodology_Normal.self):
-            descriptor = descriptor + "ReproNormal"
-            break
-        case String(describing: ReproductionMethodology_LoveChildren.self):
-            descriptor = descriptor + "ReproLoveChild"
-            break
-        default:
-            descriptor = descriptor + ".."
-        }
-        return descriptor
-    }
-
-    func descriptorOfHeritage() -> String {
-        var descriptor:String = ""
-        switch String(describing: type(of: heritage)) {
-        case String(describing: HeritageMethodology.self):
-            descriptor = descriptor + "0"
-            break
-        case String(describing: HeritageMethodology_Normal.self):
-            descriptor = descriptor + "HeritageAll"
-            break
-        case String(describing: HeritageMethodology_OnlyFirstSon.self):
-            descriptor = descriptor + "HeritageFirstSon"
-            break
-        default:
-            descriptor = descriptor + ".."
-        }
-        return descriptor
+        return teamLead.descriptor()+"-"+teamFollow.descriptor()+"-"+reproduction.descriptor()+"-"+heritage.descriptor()
     }
 
     static func randomMethodGenerator() -> Methodology {
-        return Methodology(teamLead: TeamLeadMethodology.teamLeadRandomMethodGenerator(),
-                           teamFollow: TeamFollowMethodology.teamFollowRandomMethodGenerator(),
-                           reproduction: ReproductionMethodology.reproductionRandomMethodGenerator(),
-                           heritage:HeritageMethodology.heritageRandomMethodGenerator())
+        return Methodology(teamLead: TeamLeadMethodology.randomMethodGenerator(),
+                           teamFollow: TeamFollowMethodology.randomMethodGenerator(),
+                           reproduction: ReproductionMethodology.randomMethodGenerator(),
+                           heritage:HeritageMethodology.randomMethodGenerator())
     }
 }
 

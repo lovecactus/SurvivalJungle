@@ -95,8 +95,8 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
         }
 
         
-        let generalStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == false })
-        let speciesStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == true })
+        let generalStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == false && $0.key.hasPrefix("Ignore:") == false})
+//        let speciesStatistic = sampleStatistic.filter({$0.key.hasPrefix("Species:") == true })
         for (key, _) in generalStatistic {
             let staticValue:[ChartDataEntry] = []
             if (key.hasPrefix(("Species:"))){
@@ -149,6 +149,9 @@ class LineChartStaticsViewController: UIViewController, ChartViewDelegate {
                 break
             case 9:
                 color = .magenta
+                break
+            case 10:
+                color = .lightGray
                 break
             default:
                 color = .black

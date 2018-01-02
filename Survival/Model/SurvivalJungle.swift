@@ -8,14 +8,12 @@
 
 import Foundation
 
-struct CreatureSocialGroup {
-    var groupMember : [Creature]
-}
-
 typealias CreatureGroup = [CreatureUniqueID:Creature]
 
 class SurvivalJungle {
     var jungleTotalResource:RewardResource
+    var jungleTotalResourceMax:RewardResource
+    var jungleTotalResourceMin:RewardResource
     var currentSeason:Int
     var creatureNumber:Int
 
@@ -24,12 +22,36 @@ class SurvivalJungle {
     var social:SocialBehavior? = nil
     
     var statistic:[SurvivalStatistic] = []
+    var statisticFilter:[String] = []
     
     init(totalResource:Double, averageCreatureNumber:Int) {
-        jungleTotalResource = totalResource
+        jungleTotalResourceMax = totalResource
+        jungleTotalResourceMin = totalResource/3
+        jungleTotalResource = totalResource*2/3
         creatureNumber = averageCreatureNumber
         currentSeason = 0
         self.initialCreatureGroup()
+        statisticFilter = [
+//            "Method:-MatingMore",
+//            "Method:-MatingLess",
+//            "Method:-LoveChild",
+//            "Method:-HateChild",
+            "Method:-Male",
+            "Method:-Female",
+            "Method:Adapter",
+            "Method:BornLeader",
+            "Method:BornFollower",
+//            "Method:AllSons",
+//            "Method:FirstSon"
+//            "Method:-AllIn",
+//            "Method:-Responsive",
+//            "Method:-BeLazy",
+//            "Method:-AnyOneOK",
+//            "Method:-NoLazy",
+//            "Method:-ValueDigger",
+//            "Method:-OnlyAllIn",
+        ]
+
     }
     
     func initialCreatureGroup() {
@@ -38,6 +60,7 @@ class SurvivalJungle {
                                                       givenName: String(index),
                                                       methodology: Methodology.randomMethodGenerator(),
                                                       age: Int(arc4random_uniform(50)))
+            newBornCreature.surviveResource = 40+SurvivalResource(arc4random_uniform(40))
             allCreatures[newBornCreature.identifier.uniqueID] = newBornCreature
 
         }
@@ -75,12 +98,16 @@ class SurvivalJungle {
             previousTimestamp = currentTimestamp
             print ("Cost:"+String(costTime))
             currentSeason += 1;
+            jungleTotalResource += SurvivalResource(arc4random_uniform(UInt32(jungleTotalResourceMax/10))) - jungleTotalResourceMax/20
+            jungleTotalResource = (jungleTotalResource > jungleTotalResourceMax) ? jungleTotalResourceMax : jungleTotalResource
+            jungleTotalResource = (jungleTotalResource < jungleTotalResourceMin) ? jungleTotalResourceMin : jungleTotalResource
             var seasonResource = jungleTotalResource
             let social = SocialBehavior(with: &allCreatures, seasonResource:&seasonResource)
+            social.statistic["Season Resource"] = seasonResource
             social.SeasonWork()
 
             let newBornCreatures = social.CreaturesReproduction()
-//            social.statistic["New Born"] = Double(newBornCreatures.count)
+            social.statistic["Ignore:New Born"] = Double(newBornCreatures.count)
             newBornCreatures.forEach({ (creature) in
                 guard nil == allCreatures[creature.identifier.uniqueID] else {
                     print(#function+": Critical error. Duplicate creature unique ID")
@@ -90,36 +117,39 @@ class SurvivalJungle {
             })
 
             let seasonDiedCreature = self.CreaturesSurvival()
-//            social.statistic["Died"] = Double(seasonDiedCreature.count)
+            social.statistic["Ignore:Died"] = Double(seasonDiedCreature.count)
             diedCreatures.append(contentsOf: seasonDiedCreature)
             
             self.CreaturesAging()
-//            social.statistic.countResource(in: allCreatures)
+            
+            social.statistic["Ignore:Creature Type"] = Double(allCreatures.findAllCreatureMethodology().count)
+
 //            for methodologyDescriptor in allCreatures.findAllCreatureMethodology() {
 //                social.statistic["Species:"+methodologyDescriptor] = Double(allCreatures.findAllCreatureWith(methodDescriptor:methodologyDescriptor).count)
 //            }
+            for filterKey in statisticFilter.filter({$0.hasPrefix("Method:")}).map({String($0.suffix(from: $0.index($0.startIndex, offsetBy: "Method:".count)))}) {
+                social.statistic[filterKey] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:filterKey).count)
+            }
+            
+            statistic.append(social.statistic)
+            print("season-\(currentSeason):\(social.statistic)")
             
             if currentSeason % 10 == 0 {
+                var logs:[(String,Double)] = []
                 for (methodologyDescriptor, count) in allCreatures.categoryCreatureMethodologys() {
                     social.statistic["Species:"+methodologyDescriptor] = Double(count)
+                    logs.append(("Species:"+methodologyDescriptor,Double(count)))
                 }
+                logs.sorted(by: { (value1, value2) -> Bool in
+                    return value1.1 > value2.1
+                }).forEach({ (key) in
+                    print(key.0+":\t\t\(key.1)")
+                })
             }
 
-            social.statistic["Method:ReproLoveChild"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"ReproLoveChild").count)
-            social.statistic["Method:ReproNormal"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"ReproNormal").count)
-            social.statistic["Method:Adapter"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Adapter").count)
-            let Follower = allCreatures.findAllCreatureWith(fullMethodDescriptor:"Follower")
-            social.statistic["Method:Follower"] = Double(Follower.count)
-            social.statistic["Method:LazyFollower"] = Double(Follower.findAllCreatureWith(fullMethodDescriptor:"Lazy").count)
-            social.statistic["Method:Leader"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"Leader").count)
-            social.statistic["Method:HeritageAll"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"HeritageAll").count)
-            social.statistic["Method:HeritageFirstSon"] = Double(allCreatures.findAllCreatureWith(fullMethodDescriptor:"HeritageFirstSon").count)
-//            social.statistic["CreatureCount"] = Double(allCreatures.findAllCreatureMethodology().count)
-
-            statistic.append(social.statistic)
-            print("season-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == false && $0.key.hasPrefix("Method:") == false})")
-            print("method-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Method:") == true })")
-            print("species-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == true })")
+//            print("season-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == false && $0.key.hasPrefix("Method:") == false})")
+//            print("method-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Method:") == true })")
+//            print("species-\(currentSeason):\(social.statistic.filter{$0.key.hasPrefix("Species:") == true })")
         }
         return statistic
     }

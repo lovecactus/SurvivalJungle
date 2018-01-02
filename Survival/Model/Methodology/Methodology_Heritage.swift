@@ -9,7 +9,7 @@
 import Foundation
 
 class HeritageMethodology {
-    public static func heritageRandomMethodGenerator() -> HeritageMethodology {
+    public static func randomMethodGenerator() -> HeritageMethodology {
         let method:HeritageMethodology
         switch Int(arc4random_uniform(2)) {
         case 0:
@@ -22,6 +22,24 @@ class HeritageMethodology {
             method = HeritageMethodology()
         }
         return method
+    }
+    
+    public func descriptor() -> String {
+        var descriptor:String = ""
+        switch String(describing: type(of: self)) {
+        case String(describing: HeritageMethodology.self):
+            descriptor = descriptor + "0"
+            break
+        case String(describing: HeritageMethodology_Normal.self):
+            descriptor = descriptor + "AllSons"
+            break
+        case String(describing: HeritageMethodology_OnlyFirstSon.self):
+            descriptor = descriptor + "FirstSon"
+            break
+        default:
+            descriptor = descriptor + ".."
+        }
+        return descriptor
     }
 
     public func heritage(of creature:Creature, to creatures:inout CreatureGroup) {

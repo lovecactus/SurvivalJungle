@@ -33,27 +33,15 @@ struct CooperationAction {
     var memberActions:[CreatureUniqueID:TeamCooperationEffort]
     var workingCosts:[CreatureUniqueID:WorkingCostResource]
 
-    func TotalEffort() -> EffortValue{
+    func totalEffort() -> EffortValue{
         let teamWorkingValue = self.memberActions.enumerated().reduce(0, { (result, action) -> EffortValue in
-            let attitudeRate:TeamCooperationAttitudeRate
-            switch action.element.value.Attitude {
-            case .AllIn:
-                attitudeRate = .AllInRate
-                break
-            case .Responsive:
-                attitudeRate = .ResponsiveRate
-                break
-            case .Lazy:
-                attitudeRate = .LazyRate
-                break
-            }
-            let workingValue = action.element.value.Value*attitudeRate.rawValue
+            let workingValue = action.element.value.effortValue()
             return result+workingValue
         })
         return teamWorkingValue
     }
     
-    func WorkMemberCount() -> Int{
+    func workMemberCount() -> Int{
         return self.memberActions.count
 //        let workMemberCount = self.memberActions.enumerated().reduce(0, { (result, action) -> Int in
 //            switch action.element.value.Attitude {
@@ -70,13 +58,29 @@ struct CooperationAction {
 }
 
 struct CooperationGoal {
-    var Succeed:Bool
+    var succeed:Bool
 }
 
 struct TeamCooperationEffort{
-    var Attitude:TeamCooperationAttitude
-    var Age:Int
-    var Value:EffortValue
+    var attitude:TeamCooperationAttitude
+    var age:Int
+    var value:EffortValue
+    
+    func effortValue() -> EffortValue {
+        let attitudeRate:TeamCooperationAttitudeRate
+        switch self.attitude {
+        case .AllIn:
+            attitudeRate = .AllInRate
+            break
+        case .Responsive:
+            attitudeRate = .ResponsiveRate
+            break
+        case .Lazy:
+            attitudeRate = .LazyRate
+            break
+        }
+        return value*attitudeRate.rawValue
+    }
 }
 
 enum TeamCooperationAttitude {
@@ -92,13 +96,14 @@ enum TeamCooperationAttitudeRate : Double{
 }
 
 struct CooperationReward {
-    var TotalRewards:RewardResource
-    var MemberRewards:[CreatureUniqueID:RewardResource]
+    var totalRewards:RewardResource
+    var leaderExploitation:RewardResource
+    var memberRewards:[CreatureUniqueID:RewardResource]
 }
 
 struct TeamWorkCooperation{
     init(Team:CooperationTeam, TeamProposal:CooperationTeam) {
-        Goal = CooperationGoal(Succeed: false)
+        Goal = CooperationGoal(succeed: false)
         Action = CooperationAction(memberActions: [:], workingCosts: [:])
         Reward = nil
         self.Team = Team

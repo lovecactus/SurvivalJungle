@@ -10,65 +10,125 @@ import Foundation
 
 
 class TeamFollowMethodology {
-    public static func teamFollowRandomMethodGenerator() -> TeamFollowMethodology {
-        let method:TeamFollowMethodology
+    var teamFollowChoose:TeamFollowChooseMethodology = TeamFollowChooseMethodology()
+    var teamFollowAttitude:TeamFollowAttitudeMethodology = TeamFollowAttitudeMethodology()
+
+    public static func randomMethodGenerator() -> TeamFollowMethodology {
+        let newRandomMethod = TeamFollowMethodology()
+        newRandomMethod.teamFollowChoose = TeamFollowChooseMethodology.randomMethodGenerator()
+        newRandomMethod.teamFollowAttitude = TeamFollowAttitudeMethodology.randomMethodGenerator()
+        
+        return newRandomMethod
+    }
+
+    public func descriptor() -> String {
+        let descriptor:String = "Follow"+teamFollowChoose.descriptor()+"-"+teamFollowAttitude.descriptor()
+        return descriptor
+    }
+    
+}
+
+class TeamFollowChooseMethodology {
+    public static func randomMethodGenerator() -> TeamFollowChooseMethodology {
+        let method:TeamFollowChooseMethodology
         switch Int(arc4random_uniform(5)) {
         case 0:
-            method = TeamFollowMethodology_Random()
+            method = TeamFollowChooseMethodology_Random()
             break
         case 1:
-            method = TeamFollowMethodology_SelfishRewardFollower()
+            method = TeamFollowChooseMethodology_Consist()
             break
         case 2:
-            method = TeamFollowMethodology_ConservativeRewardFollower()
+            method = TeamFollowChooseMethodology_LowReward()
             break
-//        case 3:
-//            method = TeamFollowMethodology_FairFollower()
-//            break
         case 3:
-            method = TeamFollowMethodology_ConservativeRewardFollower_Lazy()
+            method = TeamFollowChooseMethodology_HighReward()
             break
         case 4:
-            method = TeamFollowMethodology_SelfishRewardFollower_Lazy()
+            method = TeamFollowChooseMethodology_Fair()
             break
-//        case 5:
-//            method = TeamFollowMethodology_FairFollower_Lazy()
-//            break
         default:
-            method = TeamFollowMethodology()
+            method = TeamFollowChooseMethodology()
         }
         return method
     }
-
     
-    func AcceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+    func descriptor() -> String {
+        var descriptor:String = ""
+        switch String(describing: type(of: self)) {
+        case String(describing: TeamFollowChooseMethodology.self):
+            descriptor = descriptor + ""
+            break
+        case String(describing: TeamFollowChooseMethodology_Random.self):
+            descriptor = descriptor + "Random"
+            break
+        case String(describing: TeamFollowChooseMethodology_Consist.self):
+            descriptor = descriptor + "Consist"
+            break
+        case String(describing: TeamFollowChooseMethodology_LowReward.self):
+            descriptor = descriptor + "LowReward"
+            break
+        case String(describing: TeamFollowChooseMethodology_HighReward.self):
+            descriptor = descriptor + "HighReward"
+            break
+        case String(describing: TeamFollowChooseMethodology_Fair.self):
+            descriptor = descriptor + "Fair"
+            break
+        default:
+            descriptor = descriptor + "UnknownDescriptor"
+        }
+        return descriptor
+    }
+    
+    func acceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
         if creature.memory.shortMemory.isAssamblingTeam {
             return nil
         }
         
         return teams.randomPick()
     }
-    
-    func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .AllIn
+
+}
+
+class TeamFollowChooseMethodology_Random:TeamFollowChooseMethodology{
+    override func acceptInvite(from creature:Creature, to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        if creature.memory.shortMemory.isAssamblingTeam {
+            return nil
+        }
+        
+        return teams.randomPick()
     }
-    
 }
 
-class TeamFollowMethodology_Random:TeamFollowMethodology{
-}
-
-class TeamFollowMethodologyLazy:TeamFollowMethodology{
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .Lazy
-    }
-    
-}
-
-class TeamFollowMethodology_ConservativeRewardFollower:TeamFollowMethodology{
-    override func AcceptInvite(from creature:Creature,
+class TeamFollowChooseMethodology_Consist:TeamFollowChooseMethodology{
+    override func acceptInvite(from creature:Creature,
                                to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        if nil == super.AcceptInvite(from: creature, to: teams) {
+        if nil == super.acceptInvite(from: creature, to: teams) {
+            return nil
+        }
+        let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
+        let scores = leaderIDs.map { (leaderID) -> (String,Double) in
+            let memorySlices = creature.memory.thinkOfMemory(Of: leaderID)
+            guard memorySlices.count > 0 else {
+                return (leaderID, teamWorkConsistReword)
+            }
+            let rewards = memorySlices.map{$0.Reward?.memberRewards[creature.identifier.uniqueID] ?? Double(0)}
+            let averageRewards = (rewards.reduce(0, +))/Double(rewards.count)
+            return (leaderID,averageRewards)
+            }.sorted  { $0.1 > $1.1 }
+        if let bestLeaderID = scores.first?.0,
+            let bestTeam = teams.first(where: { $0.Team.TeamLeaderID == bestLeaderID}) {
+            return bestTeam
+        }
+        return teams.randomPick()
+    }
+}
+
+
+class TeamFollowChooseMethodology_LowReward:TeamFollowChooseMethodology{
+    override func acceptInvite(from creature:Creature,
+                               to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
+        if nil == super.acceptInvite(from: creature, to: teams) {
             return nil
         }
         let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
@@ -77,7 +137,7 @@ class TeamFollowMethodology_ConservativeRewardFollower:TeamFollowMethodology{
             guard memorySlices.count > 0 else {
                 return (leaderID, teamWorkConservativeReword)
             }
-            let rewards = memorySlices.map{$0.Reward?.MemberRewards[creature.identifier.uniqueID] ?? Double(0)}
+            let rewards = memorySlices.map{$0.Reward?.memberRewards[creature.identifier.uniqueID] ?? Double(0)}
             let averageRewards = (rewards.reduce(0, +))/Double(rewards.count)
             return (leaderID,averageRewards)
             }.sorted  { $0.1 > $1.1 }
@@ -87,16 +147,12 @@ class TeamFollowMethodology_ConservativeRewardFollower:TeamFollowMethodology{
         }
         return teams.randomPick()
     }
-    
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .AllIn
-    }
 }
 
-class TeamFollowMethodology_SelfishRewardFollower:TeamFollowMethodology{
-    override func AcceptInvite(from creature:Creature,
+class TeamFollowChooseMethodology_HighReward:TeamFollowChooseMethodology{
+    override func acceptInvite(from creature:Creature,
                                to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        if nil == super.AcceptInvite(from: creature, to: teams) {
+        if nil == super.acceptInvite(from: creature, to: teams) {
             return nil
         }
         let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
@@ -105,7 +161,7 @@ class TeamFollowMethodology_SelfishRewardFollower:TeamFollowMethodology{
             guard memorySlices.count > 0 else {
                 return (leaderID,teamWorkIdealReword)
             }
-            let rewards = memorySlices.map{$0.Reward?.MemberRewards[creature.identifier.uniqueID] ?? Double(0)}
+            let rewards = memorySlices.map{$0.Reward?.memberRewards[creature.identifier.uniqueID] ?? Double(0)}
             let averageRewards = (rewards.reduce(0, +))/Double(rewards.count)
             return (leaderID,averageRewards)
             }.sorted  { $0.1 > $1.1 }
@@ -115,17 +171,12 @@ class TeamFollowMethodology_SelfishRewardFollower:TeamFollowMethodology{
         }
         return teams.randomPick()
     }
-    
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .AllIn
-    }
-    
 }
 
-class TeamFollowMethodology_FairFollower:TeamFollowMethodology{
-    override func AcceptInvite(from creature:Creature,
+class TeamFollowChooseMethodology_Fair:TeamFollowChooseMethodology{
+    override func acceptInvite(from creature:Creature,
                                to teams:[TeamWorkCooperation]) -> TeamWorkCooperation?{
-        if nil == super.AcceptInvite(from: creature, to: teams) {
+        if nil == super.acceptInvite(from: creature, to: teams) {
             return nil
         }
         let leaderIDs = teams.map { $0.Team.TeamLeaderID}.shuffled()
@@ -138,8 +189,8 @@ class TeamFollowMethodology_FairFollower:TeamFollowMethodology{
             let fair = memorySlices.map({ (cooperation) -> Int in
                 guard let randomOtherMemberID = cooperation.Team.OtherMemberIDs.randomPick(),
                     let reward = cooperation.Reward,
-                    let otherReward = reward.MemberRewards[randomOtherMemberID],
-                    let leaderReward = reward.MemberRewards[leaderID] else {
+                    let otherReward = reward.memberRewards[randomOtherMemberID],
+                    let leaderReward = reward.memberRewards[leaderID] else {
                         return 0
                 }
                 
@@ -164,27 +215,68 @@ class TeamFollowMethodology_FairFollower:TeamFollowMethodology{
         }
         return teams.randomPick()
     }
+}
+
+class TeamFollowAttitudeMethodology {
+    public static func randomMethodGenerator() -> TeamFollowAttitudeMethodology {
+        let method:TeamFollowAttitudeMethodology
+        switch Int(arc4random_uniform(3)) {
+        case 0:
+            method = TeamFollowAttitudeMethodology_AllIn()
+            break
+        case 1:
+            method = TeamFollowAttitudeMethodology_Responsive()
+            break
+        case 2:
+            method = TeamFollowAttitudeMethodology_Lazy()
+            break
+        default:
+            method = TeamFollowAttitudeMethodology()
+        }
+        return method
+    }
     
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
+    func descriptor() -> String {
+        var descriptor:String = ""
+        switch String(describing: type(of: self)) {
+        case String(describing: TeamFollowAttitudeMethodology.self):
+            descriptor = descriptor + ""
+            break
+        case String(describing: TeamFollowAttitudeMethodology_AllIn.self):
+            descriptor = descriptor + "AllIn"
+            break
+        case String(describing: TeamFollowAttitudeMethodology_Responsive.self):
+            descriptor = descriptor + "Responsive"
+            break
+        case String(describing: TeamFollowAttitudeMethodology_Lazy.self):
+            descriptor = descriptor + "BeLazy"
+            break
+        default:
+            descriptor = descriptor + "UnknownDescriptor"
+        }
+        return descriptor
+    }
+
+    func workingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
         return .AllIn
     }
     
 }
 
-class TeamFollowMethodology_ConservativeRewardFollower_Lazy:TeamFollowMethodology_ConservativeRewardFollower{
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .Lazy
+class TeamFollowAttitudeMethodology_AllIn:TeamFollowAttitudeMethodology{
+    override func workingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
+        return .AllIn
     }
 }
 
-class TeamFollowMethodology_SelfishRewardFollower_Lazy:TeamFollowMethodology_SelfishRewardFollower{
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
-        return .Lazy
+class TeamFollowAttitudeMethodology_Responsive:TeamFollowAttitudeMethodology{
+    override func workingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
+        return .Responsive
     }
 }
 
-class TeamFollowMethodology_FairFollower_Lazy:TeamFollowMethodology_FairFollower{
-    override func WorkingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
+class TeamFollowAttitudeMethodology_Lazy:TeamFollowAttitudeMethodology{
+    override func workingAttitude(from creature:Creature, to team:TeamWorkCooperation) -> TeamCooperationAttitude{
         return .Lazy
     }
 }

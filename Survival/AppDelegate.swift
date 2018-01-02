@@ -55,14 +55,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let statisticsVC = LineChartStaticsViewController(Statistic: [])
         self.window?.rootViewController = statisticsVC
         DispatchQueue.global(qos: .default).async {
-            let jungle = SurvivalJungle(totalResource: 4000, averageCreatureNumber: 500)
+            let jungle = SurvivalJungle(totalResource: 2000, averageCreatureNumber:100)
             for _ in 1...INT_MAX {
                 let survivalStatic = jungle.Run(10)
                 DispatchQueue.main.async {
                     statisticsVC.updateStaticsData(survivalStatic)
                 }
                 
-                if (jungle.allCreatures.count < 30){
+                if (jungle.allCreatures.count < 50){
                     print("Creature extinction!")
                 }
                 print("Survived:"+String(jungle.allCreatures.count))
